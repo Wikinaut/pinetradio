@@ -5,6 +5,7 @@
 # init 20230218
 
 import signal
+from threading import Timer
 import RPi.GPIO as GPIO
 import sys
 import os
@@ -18,6 +19,8 @@ from PIL import ImageFont
 import ST7789
 
 configfile = "/home/pi/inetradio.cfg"
+
+graceperiod = 0.5 # seconds
 
 global stationcounter
 
@@ -109,8 +112,7 @@ def stwrite(message):
 	draw.text((0, text_y), message, font=font, fill=(255, 255, 255))
 	disp.display(img)
 
-
-def stationplay(station):
+def stationplay(stationurl):
 	global proc
 
 	try:
@@ -123,10 +125,7 @@ def stationplay(station):
 
 		pass
 
-	proc = Popen( [ 'mplayer', \
-		'-loop', '0', '-allow-dangerous-playlist-parsing', \
-		station ], \
-		stdout = DEVNULL, stderr = DEVNULL )
+	proc = Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = DEVNULL, stderr = DEVNULL )
 
 
 # "handle_button" will be called every time a button is pressed
@@ -135,10 +134,26 @@ def handle_button(pin):
     label = LABELS[BUTTONS.index(pin)]
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
-def playstation(stationcounter):
+def playstation(stationcounter, graceful):
     station = STATIONS[stationcounter]
     stwrite( "[{0}] {1}".format(stationcounter, station[0]) )
-    stationplay( station[1] )
+
+    try:
+
+        play.cancel()
+
+    except NameError:
+
+        pass
+
+    if (graceful):
+
+        play = Timer( graceperiod, stationplay, args=( station[1], ) )
+        play.start()
+
+    else:
+
+        stationplay( station[1] )
 
 def updstationcounter(stationcounter):
     f = open( configfile, "w")
@@ -146,16 +161,18 @@ def updstationcounter(stationcounter):
     f.close()
 
 def handle_radiobutton(pin):
+    global stationcounter
+    global play
     stationcounter = BUTTONS.index(pin)
-    playstation(stationcounter)
     updstationcounter(stationcounter)
+    playstation(stationcounter, graceful=False)
 
 def handle_stationincrement_button(pin):
     global stationcounter
+    global play
     stationcounter = (stationcounter+1) % len(STATIONS)
-    playstation(stationcounter)
     updstationcounter(stationcounter)
-
+    playstation(stationcounter, graceful=True)
 
 # Loop through out buttons and attach the "handle_button" function to each
 # We're watching the "FALLING" edge (transition from 3.3V to Ground) and
@@ -176,6 +193,6 @@ GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, b
 # for s in STATIONS:
 #	print(s)
 
-playstation(stationcounter)
+playstation(stationcounter, graceful=False)
 
 signal.pause()

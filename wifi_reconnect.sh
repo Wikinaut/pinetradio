@@ -19,6 +19,18 @@
 #	iface wlan0 inet manual
 #	post-up iw wlan0 set power_save off
 
+#	get system uptime in minutes:
+#	echo $(awk '{print $1}' /proc/uptime) / 60 | bc
+#
+#	check, if servicex is running:
+#	systemctl is-active --quiet servicex && echo Servicex is running
+
+uptimeminutes=$( echo $( awk '{print $1}' /proc/uptime ) / 60 | bc )
+
+if [[ $uptimeminutes -lt 4 ]]; then
+	exit
+fi
+
 verbose=0
 if [[ $1 = "-v" ]]; then verbose=1 ;fi
 
@@ -45,7 +57,7 @@ ping -I ${WLANINTERFACE} -c2 ${SERVER} >/dev/null
 
 if [ $? != 0 ]; then
 
-	echo "$NOW Restarted WiFi" >> /var/log/wifi_reconnect
+	# systemctl is-active --quiet inetradio && echo "$NOW Restarted WiFi" >> /var/log/wifi_reconnect
 
 	# Restart the wireless interface
 	ip link set wlan0 down
