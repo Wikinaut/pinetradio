@@ -4,6 +4,23 @@
 #
 # init 20230218
 
+STATIONS = [
+	[ "DLF Kultur", "http://st02.dlf.de/dlf/02/128/mp3/stream.mp3" ],
+	[ "DLF", "http://st01.dlf.de/dlf/01/128/mp3/stream.mp3" ],
+	[ "Kulturradio", "http://kulturradio.de/live.m3u" ],
+	[ "Radio Eins", "http://www.radioeins.de/livemp3" ],
+	[ "WDR 5", "https://www1.wdr.de/radio/wdr5/" ],
+	[ "Ellinikos 93,2", "https://www1.wdr.de/radio/wdr5/" ],
+	[ "JazzRadio Berlin", "http://streaming.radio.co/s774887f7b/listen" ],
+	[ "WDR Cosmo", "http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3" ],
+	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
+	[ "Left Coast", "http://somafm.com/seventies.pls" ],
+	[ "Groove Salad", "http://ice1.somafm.com/groovesalad-128-mp3" ],
+	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
+]
+
+graceperiod = 0.5 # seconds
+
 import signal
 from threading import Timer
 import RPi.GPIO as GPIO
@@ -19,8 +36,6 @@ from PIL import ImageFont
 import ST7789
 
 configfile = "/home/pi/inetradio.cfg"
-
-graceperiod = 0.5 # seconds
 
 global stationcounter
 
@@ -51,25 +66,9 @@ PIN = {
 # Set up RPi.GPIO with the "BCM" numbering scheme
 GPIO.setmode(GPIO.BCM)
 
-
 # Buttons connect to ground when pressed, so we should set them up
 # with a "PULL UP", which weakly pulls the input signal to 3.3V.
 GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-STATIONS = [
-	[ "DLF Kultur", "http://st02.dlf.de/dlf/02/128/mp3/stream.mp3" ],
-	[ "DLF", "http://st01.dlf.de/dlf/01/128/mp3/stream.mp3" ],
-	[ "Kulturradio", "http://kulturradio.de/live.m3u" ],
-	[ "Radio Eins", "http://www.radioeins.de/livemp3" ],
-	[ "WDR 5", "https://www1.wdr.de/radio/wdr5/" ],
-	[ "Ellinikos 93,2", "https://www1.wdr.de/radio/wdr5/" ],
-	[ "JazzRadio B", "http://streaming.radio.co/s774887f7b/listen" ],
-	[ "Cosmo", "http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3" ],
-	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
-	[ "Left Coast", "http://somafm.com/seventies.pls" ],
-	[ "Groove Salad", "http://ice1.somafm.com/groovesalad-128-mp3" ],
-	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
-]
 
 # Create ST7789 LCD display class for square LCD
 
@@ -88,36 +87,39 @@ disp = ST7789.ST7789(
         offset_top=0
     )
 
-def stwrite(message):
+
+def cleardisplay():
+	global disp,img,draw
 
 	# Initialize display.
 	disp.begin()
-
-	WIDTH = disp.width
-	HEIGHT = disp.height
-
-	img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
+	img = Image.new('RGB', (disp.width, disp.height), color=(0, 0, 0))
 	draw = ImageDraw.Draw(img)
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
+	draw.rectangle((0, 0, disp.width, disp.height), (0, 0, 0))
+
+def stwrite2(message):
+	global disp,img,draw
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+	size_x, size_y = draw.textsize(message, font)
+	text_x = 0
+	text_y = 0
+	draw.text((text_x, text_y), message, font=font, fill=(255, 0, 0))
+	disp.display(img)
+
+def stwrite(message):
+	global disp,img,draw
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
 	size_x, size_y = draw.textsize(message, font)
 	text_x = disp.width
-	text_y = (disp.height - size_y) // 2
-
-	t_start = time.time()
-
-	# x = (time.time() - t_start) * 100
-	# x %= (size_x + disp.width)
-
-	draw.rectangle((0, 0, disp.width, disp.height), (0, 0, 0))
+	text_y = (disp.height - size_y) // 2 - 40
 	draw.text((0, text_y), message, font=font, fill=(255, 255, 255))
-	disp.display(img)
 
 def stationplay(stationurl):
 	global proc
 
 	try:
-		# print("Killing pulseaudio and mplayer mplayer\n")
-
 		proc.kill()
 		os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
 
@@ -136,7 +138,10 @@ def handle_button(pin):
 
 def playstation(stationcounter, graceful):
     station = STATIONS[stationcounter]
-    stwrite( "[{0}] {1}".format(stationcounter, station[0]) )
+
+    cleardisplay()
+    stwrite( "{0}".format( station[0] ) )
+    stwrite2( "{0}".format( stationcounter+1 ) )
 
     try:
 
