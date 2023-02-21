@@ -9,8 +9,8 @@ STATIONS = [
 	[ "DLF", "http://st01.dlf.de/dlf/01/128/mp3/stream.mp3" ],
 	[ "Kulturradio", "http://kulturradio.de/live.m3u" ],
 	[ "Radio Eins", "http://www.radioeins.de/livemp3" ],
-	[ "WDR 5", "https://www1.wdr.de/radio/wdr5/" ],
-	[ "Ellinikos 93,2", "https://www1.wdr.de/radio/wdr5/" ],
+	[ "WDR 5", "http://wdr-wdr5-live.icecast.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3" ],
+	[ "Ellinikos 93,2", "http://netradio.live24.gr/orange9320" ],
 	[ "JazzRadio Berlin", "http://streaming.radio.co/s774887f7b/listen" ],
 	[ "WDR Cosmo", "http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3" ],
 	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
@@ -19,17 +19,17 @@ STATIONS = [
 	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
 ]
 
-graceperiod = 0.5 # seconds
+graceperiod = 2.0 # seconds
 
 import signal
 from threading import Timer
 import RPi.GPIO as GPIO
 import sys
 import os
+import re
 from pathlib import Path
 import time
-from subprocess import Popen, DEVNULL
-
+import subprocess
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -97,6 +97,15 @@ def cleardisplay():
 	draw = ImageDraw.Draw(img)
 	draw.rectangle((0, 0, disp.width, disp.height), (0, 0, 0))
 
+def stwrite(message):
+	global disp,img,draw
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+	size_x, size_y = draw.textsize(message, font)
+	text_x = disp.width
+	text_y = (disp.height - size_y) // 2 - 40
+	draw.text((0, text_y), message, font=font, fill=(255, 255, 255))
+
 def stwrite2(message):
 	global disp,img,draw
 
@@ -107,14 +116,16 @@ def stwrite2(message):
 	draw.text((text_x, text_y), message, font=font, fill=(255, 0, 0))
 	disp.display(img)
 
-def stwrite(message):
+def stwrite3(message):
 	global disp,img,draw
 
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
 	size_x, size_y = draw.textsize(message, font)
-	text_x = disp.width
-	text_y = (disp.height - size_y) // 2 - 40
-	draw.text((0, text_y), message, font=font, fill=(255, 255, 255))
+	text_x = 0
+	text_y = disp.height-50
+	draw.text((text_x, text_y), message, font=font, fill=(255, 255, 255))
+	disp.display(img)
+
 
 def stationplay(stationurl):
 	global proc
@@ -127,7 +138,7 @@ def stationplay(stationurl):
 
 		pass
 
-	proc = Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = DEVNULL, stderr = DEVNULL )
+	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL )
 
 
 # "handle_button" will be called every time a button is pressed
@@ -137,6 +148,8 @@ def handle_button(pin):
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
 def playstation(stationcounter, graceful):
+    global play
+
     station = STATIONS[stationcounter]
 
     cleardisplay()
@@ -170,12 +183,19 @@ def handle_radiobutton(pin):
     global play
     stationcounter = BUTTONS.index(pin)
     updstationcounter(stationcounter)
-    playstation(stationcounter, graceful=False)
+    playstation(stationcounter, graceful=True)
 
 def handle_stationincrement_button(pin):
     global stationcounter
     global play
     stationcounter = (stationcounter+1) % len(STATIONS)
+    updstationcounter(stationcounter)
+    playstation(stationcounter, graceful=True)
+
+def handle_stationdecrement_button(pin):
+    global stationcounter
+    global play
+    stationcounter = (stationcounter-1) % len(STATIONS)
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
@@ -188,8 +208,8 @@ def handle_stationincrement_button(pin):
 
 GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
 GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
 
 
 # Finally, since button handlers don't require a "while True" loop,
@@ -201,3 +221,20 @@ GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, b
 playstation(stationcounter, graceful=False)
 
 signal.pause()
+"""
+while True:
+	for line in proc.stdout:
+		print(line.decode('UTF-8'))
+
+		if line.startswith(b'ICY Info:'):
+			# ICY Info: StreamTitle='Nachrichten, ';
+			try:
+				res = re.search(r"ICY Info: StreamTitle=\'(.*)\'", line.decode('UTF-8'))
+				icyinfo = res.group(1)
+			except:
+				icyinfo = ""
+
+			print(icyinfo)
+			stwrite3(icyinfo)
+	print("Ende")
+"""
