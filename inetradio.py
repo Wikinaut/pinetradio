@@ -27,13 +27,13 @@ import RPi.GPIO as GPIO
 import sys
 import os
 import re
-from pathlib import Path
 import time
 import subprocess
+import psutil
+import ST7789
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
-import ST7789
 
 configfile = "/home/pi/inetradio.cfg"
 
@@ -131,7 +131,13 @@ def stationplay(stationurl):
 	global proc
 
 	try:
-		proc.kill()
+		# get the process id
+		print("Process ID:", proc.pid)
+
+		# call function to kill all processes in a group
+		kill_processes(proc.pid)
+#		proc.kill()
+
 		os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
 
 	except NameError:
@@ -139,6 +145,18 @@ def stationplay(stationurl):
 		pass
 
 	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL )
+
+
+def kill_processes(pid):
+    '''Kills parent and children processess'''
+    parent = psutil.Process(pid)
+    # kill all the child processes
+    for child in parent.children(recursive=True):
+        print(child)
+        child.kill()
+        # kill the parent process
+        print(parent)
+        parent.kill()
 
 
 # "handle_button" will be called every time a button is pressed
