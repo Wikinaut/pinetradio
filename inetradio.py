@@ -113,8 +113,29 @@ def stwrite2(message):
 	size_x, size_y = draw.textsize(message, font)
 	text_x = 0
 	text_y = 0
-	draw.text((text_x, text_y), message, font=font, fill=(255, 0, 0))
+	draw.text((text_x, text_y), message, font=font, fill="red")
 	disp.display(img)
+
+# wrap text into display width
+# https://stackoverflow.com/questions/8257147/wrap-text-in-pil
+def get_wrapped_text(text: str, font: ImageFont.ImageFont,
+                     line_length_in_pixels: int):
+	lines = ['']
+
+	for word in text.split():
+
+		line = f'{lines[-1]} {word}'.strip()
+
+		if ( font.getlength(line) > line_length_in_pixels ):
+			lines.append(word)
+		else:
+			lines[-1] = line
+
+		if ( word[-1] == "-" or word[-1] == "," ):
+			lines.append('') # add a new line after "-" and ","
+
+	return '\n'.join(lines)
+
 
 def stwrite3(message):
 	global disp,img,draw
@@ -123,11 +144,12 @@ def stwrite3(message):
 	size_x, size_y = draw.textsize(message, font)
 	text_x = 0
 	text_y = disp.height
-	message = message.replace( "- ", "-\n")
-	message = message.replace( ", ", ",\n")
 	newimg = img.copy()
+
 	draw = ImageDraw.Draw(newimg)
-	draw.multiline_text((text_x, text_y), message, anchor="ld", font=font, fill=(255, 255, 255))
+	wrappedmessage = get_wrapped_text( message, font, disp.width )
+	draw.multiline_text((text_x, text_y),
+		wrappedmessage, anchor="ld", font=font, fill="cyan")
 	disp.display(newimg)
 
 
@@ -141,7 +163,8 @@ def stationplay(stationurl):
 	except NameError:
 		pass
 
-	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = subprocess.PIPE, stderr = subprocess.DEVNULL )
+	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ],
+		stdout = subprocess.PIPE, stderr = subprocess.DEVNULL )
 
 
 def kill_processes(pid):
@@ -238,9 +261,10 @@ while True:
 	for line in proc.stdout:
 
 		if line.startswith(b'ICY Info:'):
+			# print(line)
 			# ICY Info: StreamTitle='Nachrichten, ';
 			try:
-				res = re.search(r"ICY Info: StreamTitle=\'(.*)\'", line.decode('UTF-8'))
+				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", line.decode('UTF-8'))
 				icyinfo = res.group(1)
 			except:
 				icyinfo = ""
