@@ -131,20 +131,13 @@ def stationplay(stationurl):
 	global proc
 
 	try:
-		# get the process id
-		print("Process ID:", proc.pid)
-
-		# call function to kill all processes in a group
 		kill_processes(proc.pid)
-#		proc.kill()
-
 		os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
 
 	except NameError:
-
 		pass
 
-	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL )
+	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ], stdout = subprocess.PIPE, stderr = subprocess.DEVNULL )
 
 
 def kill_processes(pid):
@@ -152,12 +145,10 @@ def kill_processes(pid):
     parent = psutil.Process(pid)
     # kill all the child processes
     for child in parent.children(recursive=True):
-        print(child)
         child.kill()
-        # kill the parent process
-        print(parent)
-        parent.kill()
 
+    # kill the parent process
+    parent.kill()
 
 # "handle_button" will be called every time a button is pressed
 # It receives one argument: the associated input pin.
@@ -238,11 +229,9 @@ GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, b
 
 playstation(stationcounter, graceful=False)
 
-signal.pause()
-"""
+# signal.pause()
 while True:
 	for line in proc.stdout:
-		print(line.decode('UTF-8'))
 
 		if line.startswith(b'ICY Info:'):
 			# ICY Info: StreamTitle='Nachrichten, ';
@@ -252,7 +241,5 @@ while True:
 			except:
 				icyinfo = ""
 
-			print(icyinfo)
+			# print(icyinfo)
 			stwrite3(icyinfo)
-	print("Ende")
-"""
