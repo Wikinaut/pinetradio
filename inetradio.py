@@ -122,9 +122,13 @@ def stwrite3(message):
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
 	size_x, size_y = draw.textsize(message, font)
 	text_x = 0
-	text_y = disp.height-50
-	draw.text((text_x, text_y), message, font=font, fill=(255, 255, 255))
-	disp.display(img)
+	text_y = disp.height
+	message = message.replace( "- ", "-\n")
+	message = message.replace( ", ", ",\n")
+	newimg = img.copy()
+	draw = ImageDraw.Draw(newimg)
+	draw.multiline_text((text_x, text_y), message, anchor="ld", font=font, fill=(255, 255, 255))
+	disp.display(newimg)
 
 
 def stationplay(stationurl):
