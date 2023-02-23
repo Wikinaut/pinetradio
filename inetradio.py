@@ -77,7 +77,7 @@ GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 disp = ST7789.ST7789(
         height=240,
-        rotation=90,
+        rotation=180,
         port=0,
         cs=ST7789.BG_SPI_CS_FRONT,  # BG_SPI_CS_BACK or BG_SPI_CS_FRONT
         dc=9,
