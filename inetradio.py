@@ -150,7 +150,7 @@ def writebox(draw, box, text, fontsize_max):
 		wrappedtext = get_wrapped_text( text, font, disp.width )
 		size = font.getsize_multiline(wrappedtext)
 		font_size -= 1
-	draw.multiline_text((box[1], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
+	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
 
 def stwrite3(message):
@@ -165,7 +165,7 @@ def stwrite3(message):
 	draw = ImageDraw.Draw(newimg)
 #	wrappedmessage = get_wrapped_text( message, font, disp.width )
 #	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
-	writebox( draw, ((0, 0, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
+	writebox( draw, ((21, 0, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
 	disp.display(newimg)
 
 
