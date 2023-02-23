@@ -102,14 +102,13 @@ def stwrite(message):
 
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
 	size_x, size_y = draw.textsize(message, font)
-	text_x = disp.width
-	text_y = (disp.height - size_y) // 2 - 40
-	draw.text((0, text_y), message, font=font, fill=(255, 255, 255))
+#	text_y = (disp.height - size_y) // 2 - 40
+	draw.text((40, 0), message, font=font, fill="white")
 
 def stwrite2(message):
 	global disp,img,draw
 
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
 	size_x, size_y = draw.textsize(message, font)
 	text_x = 0
 	text_y = 0
@@ -136,6 +135,23 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 
 	return '\n'.join(lines)
 
+def writebox(draw, box, text, fontsize_max):
+	global disp
+#	box = ((10, 10, 490, 190))
+#	draw = ImageDraw.Draw(im)
+	draw.rectangle(box, outline="yellow")
+
+	font_size = fontsize_max
+	fontsize_min = 20
+
+	size = None
+	while (size is None or size[0] >= box[2] - box[0] or size[1] >= box[3] - box[1]) and font_size >= fontsize_min:
+		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+		wrappedtext = get_wrapped_text( text, font, disp.width )
+		size = font.getsize_multiline(wrappedtext)
+		font_size -= 1
+	draw.multiline_text((box[1], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
+
 
 def stwrite3(message):
 	global disp,img,draw
@@ -147,9 +163,9 @@ def stwrite3(message):
 	newimg = img.copy()
 
 	draw = ImageDraw.Draw(newimg)
-	wrappedmessage = get_wrapped_text( message, font, disp.width )
-	draw.multiline_text((text_x, text_y),
-		wrappedmessage, anchor="ld", font=font, fill="cyan")
+#	wrappedmessage = get_wrapped_text( message, font, disp.width )
+#	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
+	writebox( draw, ((0, 0, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
 	disp.display(newimg)
 
 
