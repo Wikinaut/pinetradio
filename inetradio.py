@@ -134,14 +134,16 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 
 			lines.append('') # add a new line after "-" and ","
 
-	for i in range(len(lines)):
-		if lines[i] == '' or lines[i] == '-'or lines[i] == ',':
-			del lines[i]
+	cleanlines = []
+	for line in lines:
+		if not ( line == "" or line == "," or line == "-" ):
+			cleanlines.append(line)
 
-	return '\n'.join(lines)
+	return '\n'.join(cleanlines)
 
 def writebox(draw, box, text, fontsize_max):
 	global disp
+
 #	draw.rectangle(box, outline="yellow")
 
 	font_size = fontsize_max
