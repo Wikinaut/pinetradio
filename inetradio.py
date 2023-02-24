@@ -170,7 +170,7 @@ def stwrite3(message):
 	draw = ImageDraw.Draw(newimg)
 #	wrappedmessage = get_wrapped_text( message, font, disp.width )
 #	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
-	writebox( draw, ((0, 25, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
+	writebox( draw, ((0, 26, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
 	disp.display(newimg)
 
 
