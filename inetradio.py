@@ -102,7 +102,7 @@ def stwrite(message):
 
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
 	size_x, size_y = draw.textsize(message, font)
-#	text_y = (disp.height - size_y) // 2 - 40
+	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 	draw.text((40, 0), message, font=font, fill="white")
 
 def stwrite2(message):
@@ -131,15 +131,18 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 			lines[-1] = line
 
 		if ( word[-1] == "-" or word[-1] == "," ):
+
 			lines.append('') # add a new line after "-" and ","
+
+	for i in range(len(lines)):
+		if lines[i] == '' or lines[i] == '-'or lines[i] == ',':
+			del lines[i]
 
 	return '\n'.join(lines)
 
 def writebox(draw, box, text, fontsize_max):
 	global disp
-#	box = ((10, 10, 490, 190))
-#	draw = ImageDraw.Draw(im)
-	draw.rectangle(box, outline="yellow")
+#	draw.rectangle(box, outline="yellow")
 
 	font_size = fontsize_max
 	fontsize_min = 20
@@ -165,7 +168,7 @@ def stwrite3(message):
 	draw = ImageDraw.Draw(newimg)
 #	wrappedmessage = get_wrapped_text( message, font, disp.width )
 #	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
-	writebox( draw, ((21, 0, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
+	writebox( draw, ((0, 25, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
 	disp.display(newimg)
 
 
