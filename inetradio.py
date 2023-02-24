@@ -137,7 +137,7 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 	cleanlines = []
 	for line in lines:
 		if not ( line == "" or line == "," or line == "-" ):
-			cleanlines.append(line)
+			cleanlines.append(line.strip())
 
 	return '\n'.join(cleanlines)
 
@@ -155,6 +155,7 @@ def writebox(draw, box, text, fontsize_max):
 		wrappedtext = get_wrapped_text( text, font, disp.width )
 		size = font.getsize_multiline(wrappedtext)
 		font_size -= 1
+
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
 
@@ -279,13 +280,14 @@ playstation(stationcounter, graceful=False)
 
 # signal.pause()
 while True:
-	for line in proc.stdout:
+	for stdoutline in proc.stdout:
 
-		if line.startswith(b'ICY Info:'):
+		if stdoutline.startswith(b'ICY Info:'):
 			# print(line)
 			# ICY Info: StreamTitle='Nachrichten, ';
 			try:
-				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", line.decode('UTF-8'))
+				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline.decode('UTF-8'))
+
 				icyinfo = res.group(1)
 			except:
 				icyinfo = ""
