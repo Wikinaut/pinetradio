@@ -141,20 +141,22 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 
 	return '\n'.join(cleanlines)
 
-def writebox(draw, box, text, fontsize_max):
+def writebox(draw, box, text, fontsize_min, fontsize_max):
 	global disp
 
-#	draw.rectangle(box, outline="yellow")
-
 	font_size = fontsize_max
-	fontsize_min = 20
-
 	size = None
-	while (size is None or size[0] >= box[2] - box[0] or size[1] >= box[3] - box[1]) and font_size >= fontsize_min:
+
+	while ( (size is None)
+		or ( size[0] >= box[2] - box[0] )
+		or ( size[1] >= box[3] - box[1] )
+		and ( font_size >= fontsize_min ) ):
+
 		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
 		wrappedtext = get_wrapped_text( text, font, disp.width )
 		size = font.getsize_multiline(wrappedtext)
 		font_size -= 1
+		print(font_size)
 
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
@@ -171,7 +173,7 @@ def stwrite3(message):
 	draw = ImageDraw.Draw(newimg)
 #	wrappedmessage = get_wrapped_text( message, font, disp.width )
 #	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
-	writebox( draw, ((0, 26, disp.height-1, disp.width-1)), message, fontsize_max = 40 )
+	writebox( draw, ((0, 27, disp.height-1, disp.width-1)), message, fontsize_min =20, fontsize_max = 70)
 	disp.display(newimg)
 
 
