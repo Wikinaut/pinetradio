@@ -75,9 +75,11 @@ GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 # regarding backlight pin 13, read:
 # https://github.com/pimoroni/pirate-audio/issues/31#issuecomment-678313017
 
+rotation = 270
+
 disp = ST7789.ST7789(
         height=240,
-        rotation=180,
+        rotation=rotation,
         port=0,
         cs=ST7789.BG_SPI_CS_FRONT,  # BG_SPI_CS_BACK or BG_SPI_CS_FRONT
         dc=9,
@@ -121,8 +123,10 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
                      line_length_in_pixels: int):
 	lines = ['']
 
-	for word in text.split():
+#	split and keep the separators:
+	for word in re.split(r"([ /,-])", text):
 
+		word=word.strip()
 		line = f'{lines[-1]} {word}'.strip()
 
 		if ( font.getlength(line) > line_length_in_pixels ):
@@ -130,13 +134,15 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 		else:
 			lines[-1] = line
 
-		if ( word[-1] == "-" or word[-1] == "," ):
-
-			lines.append('') # add a new line after "-" and ","
+		try:
+			if ( word[-1] == "-" or word[-1] == "," or word[-1] == "/" ):
+				lines.append('') # add a new line after "-" and ","
+		except:
+			pass
 
 	cleanlines = []
 	for line in lines:
-		if not ( line == "" or line == "," or line == "-" ):
+		if not ( line == "" or line == "," or line == "-" or line == "/" ):
 			cleanlines.append(line.strip())
 
 	return '\n'.join(cleanlines)
@@ -156,7 +162,6 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 		wrappedtext = get_wrapped_text( text, font, disp.width )
 		size = font.getsize_multiline(wrappedtext)
 		font_size -= 1
-		print(font_size)
 
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
@@ -173,7 +178,7 @@ def stwrite3(message):
 	draw = ImageDraw.Draw(newimg)
 #	wrappedmessage = get_wrapped_text( message, font, disp.width )
 #	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
-	writebox( draw, ((0, 27, disp.height-1, disp.width-1)), message, fontsize_min =20, fontsize_max = 70)
+	writebox( draw, ((0, 28, disp.height-1, disp.width-1)), message, fontsize_min =20, fontsize_max = 70)
 	disp.display(newimg)
 
 
@@ -245,6 +250,20 @@ def handle_radiobutton(pin):
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
+def handle_radiobutton0(pin):
+    global stationcounter
+    global play
+    stationcounter = 0
+    updstationcounter(stationcounter)
+    playstation(stationcounter, graceful=True)
+
+def handle_radiobutton1(pin):
+    global stationcounter
+    global play
+    stationcounter = 1
+    updstationcounter(stationcounter)
+    playstation(stationcounter, graceful=True)
+
 def handle_stationincrement_button(pin):
     global stationcounter
     global play
@@ -266,11 +285,26 @@ def handle_stationdecrement_button(pin):
 # for pin in BUTTONS:
 #    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
 
-GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+if rotation == 180:
 
+	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton0, bouncetime=250)
+	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_radiobutton1, bouncetime=250)
+	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+
+elif rotation == 270:
+
+	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_radiobutton0, bouncetime=250)
+	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_radiobutton1, bouncetime=250)
+	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+
+else:
+
+	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
+	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
+	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
 
 # Finally, since button handlers don't require a "while True" loop,
 # we pause the script to prevent it exiting immediately.
