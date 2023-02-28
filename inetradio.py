@@ -124,7 +124,7 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 	lines = ['']
 
 #	split and keep the separators:
-	for word in re.split(r"([ /,-])", text):
+	for word in re.split(r"([ /-])", text):
 
 		word=word.strip()
 		line = f'{lines[-1]} {word}'.strip()
@@ -147,22 +147,74 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 
 	return '\n'.join(cleanlines)
 
+def testsize( box, font_size, text):
+	global disp
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+	wrappedtext = get_wrapped_text( text, font, disp.width )
+	size = font.getsize_multiline(wrappedtext)
+
+	if ( (size is None)
+		or ( size[0] > box[2] - box[0] )
+		or ( size[1] > box[3] - box[1] ) ):
+#		print("TEST fontsize: {0} size {1} NOTOK".format(font_size,size))
+		return None
+	else:
+#		print("TEST fontsize: {0} size {1} OK".format(font_size,size))
+		return size
+
+def bisectsize( box, a, b, text):
+
+#	print("a {0} b {1}".format(a,b))
+
+	span = b-a
+	mid = (b-a) // 2
+#	print("a {0} mid {1} b {2}".format( a, a+mid, b ))
+
+	if (mid >= 2 ):
+		if ( testsize( box, a+mid, text ) is None ):
+			return bisectsize( box, a, a+mid-1, text)
+		else:
+			return bisectsize( box, a+mid+1, b, text)
+	else:
+		if not ( testsize( box, b, text) is None ):
+#			print("return b {}".format(b))
+			return b
+		if not ( testsize( box, a+mid, text) is None ):
+#			print("return a+mid {}".format(a+mid))
+			return a+mid
+		if not ( testsize( box, a, text) is None ):
+#			print("return a {}".format(a))
+			return a
+		else:
+#			print("return a-1 {}".format(a-1))
+			return a-1
+
+
 def writebox(draw, box, text, fontsize_min, fontsize_max):
 	global disp
 
-	font_size = fontsize_max
+	font_size = bisectsize( box, fontsize_min, fontsize_max, text )
+
+	font_size1 = fontsize_max
 	size = None
 
 	while ( (size is None)
-		or ( size[0] >= box[2] - box[0] )
-		or ( size[1] >= box[3] - box[1] )
-		and ( font_size >= fontsize_min ) ):
+		or ( size[0] > box[2] - box[0] )
+		or ( size[1] > box[3] - box[1] )
+		and ( font_size1 >= fontsize_min ) ):
 
-		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size1)
 		wrappedtext = get_wrapped_text( text, font, disp.width )
 		size = font.getsize_multiline(wrappedtext)
-		font_size -= 1
 
+		font_size1 -= 1
+
+#	print("final: bisect {}".format(font_size))
+#	print("final: alt    {}".format(font_size1))
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+	wrappedtext = get_wrapped_text( text, font, disp.width )
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
 
