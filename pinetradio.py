@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# pinetradio
 # tiny internet radio with Raspberry Zero WH and Pirate-Audi HAT
 #
 # init 20230218
@@ -35,7 +36,7 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-configfile = "/home/pi/inetradio.cfg"
+configfile = "/home/pi/pinetradio.cfg"
 
 global stationcounter
 
@@ -95,27 +96,14 @@ def cleardisplay():
 
 	# Initialize display.
 	disp.begin()
-	img = Image.new('RGB', (disp.width, disp.height), color=(0, 0, 0))
+	img = Image.new('RGB', (disp.width, disp.height), color="black")
 	draw = ImageDraw.Draw(img)
-	draw.rectangle((0, 0, disp.width, disp.height), (0, 0, 0))
 
-def stwrite(message):
+def stwrite( position, message, font, color ):
 	global disp,img,draw
-
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-	size_x, size_y = draw.textsize(message, font)
-	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
-	draw.text((40, 0), message, font=font, fill="white")
-
-def stwrite2(message):
-	global disp,img,draw
-
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-	size_x, size_y = draw.textsize(message, font)
-	text_x = 0
-	text_y = 0
-	draw.text((text_x, text_y), message, font=font, fill="red")
-	disp.display(img)
+	draw.text( position, message, font=font, fill=color)
+	sizex, sizey = draw.textsize( message, font=font )
+	return ( position[0]+sizex, position[1] )
 
 # wrap text into display width
 # https://stackoverflow.com/questions/8257147/wrap-text-in-pil
@@ -148,89 +136,60 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 	return '\n'.join(cleanlines)
 
 def testsize( box, font_size, text):
-	global disp
+	global disp,wrappedtext,font
 
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
 	wrappedtext = get_wrapped_text( text, font, disp.width )
 	size = font.getsize_multiline(wrappedtext)
 
 	if ( (size is None)
-		or ( size[0] > box[2] - box[0] )
-		or ( size[1] > box[3] - box[1] ) ):
-#		print("TEST fontsize: {0} size {1} NOTOK".format(font_size,size))
+		or ( size[0] >= box[2] - box[0] )
+		or ( size[1] >= box[3] - box[1] ) ):
 		return None
 	else:
-#		print("TEST fontsize: {0} size {1} OK".format(font_size,size))
 		return size
 
 def bisectsize( box, a, b, text):
 
-#	print("a {0} b {1}".format(a,b))
-
 	span = b-a
 	mid = (b-a) // 2
-#	print("a {0} mid {1} b {2}".format( a, a+mid, b ))
 
 	if (mid >= 2 ):
+
 		if ( testsize( box, a+mid, text ) is None ):
 			return bisectsize( box, a, a+mid-1, text)
+
 		else:
 			return bisectsize( box, a+mid+1, b, text)
+
 	else:
 		if not ( testsize( box, b, text) is None ):
-#			print("return b {}".format(b))
 			return b
+
 		if not ( testsize( box, a+mid, text) is None ):
-#			print("return a+mid {}".format(a+mid))
 			return a+mid
+
 		if not ( testsize( box, a, text) is None ):
-#			print("return a {}".format(a))
 			return a
+
 		else:
-#			print("return a-1 {}".format(a-1))
 			return a-1
 
 
 def writebox(draw, box, text, fontsize_min, fontsize_max):
-	global disp
+	global disp,wrappedtext,font
 
 	font_size = bisectsize( box, fontsize_min, fontsize_max, text )
-
-	font_size1 = fontsize_max
-	size = None
-
-	while ( (size is None)
-		or ( size[0] > box[2] - box[0] )
-		or ( size[1] > box[3] - box[1] )
-		and ( font_size1 >= fontsize_min ) ):
-
-		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size1)
-		wrappedtext = get_wrapped_text( text, font, disp.width )
-		size = font.getsize_multiline(wrappedtext)
-
-		font_size1 -= 1
-
-#	print("final: bisect {}".format(font_size))
-#	print("final: alt    {}".format(font_size1))
-
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-	wrappedtext = get_wrapped_text( text, font, disp.width )
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
 
 def stwrite3(message):
 	global disp,img,draw
 
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
-	size_x, size_y = draw.textsize(message, font)
-	text_x = 0
-	text_y = disp.height
 	newimg = img.copy()
 
 	draw = ImageDraw.Draw(newimg)
-#	wrappedmessage = get_wrapped_text( message, font, disp.width )
-#	draw.multiline_text((text_x, text_y), wrappedmessage, anchor="ld", font=font, fill="cyan")
-	writebox( draw, ((0, 28, disp.height-1, disp.width-1)), message, fontsize_min =20, fontsize_max = 70)
+	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 74)
 	disp.display(newimg)
 
 
@@ -251,11 +210,8 @@ def stationplay(stationurl):
 def kill_processes(pid):
     '''Kills parent and children processess'''
     parent = psutil.Process(pid)
-    # kill all the child processes
     for child in parent.children(recursive=True):
         child.kill()
-
-    # kill the parent process
     parent.kill()
 
 # "handle_button" will be called every time a button is pressed
@@ -265,13 +221,19 @@ def handle_button(pin):
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
 def playstation(stationcounter, graceful):
-    global play
+    global play,draw,disp
 
     station = STATIONS[stationcounter]
 
     cleardisplay()
-    stwrite( "{0}".format( station[0] ) )
-    stwrite2( "{0}".format( stationcounter+1 ) )
+
+    draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
+
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+    cursor = stwrite( (0,0), "{0}".format( stationcounter+1 ), font, "red" )
+    cursor = stwrite( cursor, " {0}".format( station[0] ), font, "white" )
+
+    disp.display(img)
 
     try:
 
@@ -365,6 +327,7 @@ else:
 #	print(s)
 
 playstation(stationcounter, graceful=False)
+# draw.rectangle( ((0, 34, disp.height-1, disp.width-1)), outline="yellow")
 
 # signal.pause()
 while True:
