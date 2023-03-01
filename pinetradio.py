@@ -204,10 +204,9 @@ def stwrite3(message):
 
 	stationimg = img.copy()
 
-	draw = ImageDraw.Draw(stationimg)
+	draw = ImageDraw.Draw(newimg)
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
-	disp.display(stationimg)
-	setvol(vol,graceful=True)
+	disp.display(newimg)
 
 
 def send_command(command):
@@ -263,15 +262,12 @@ def setvol(vol, graceful):
 
 #	length = disp.height*(100-volume) // 100
 	total = len(volumesteps)-1
-
-	volimg = stationimg.copy()
-	draw = ImageDraw.Draw(volimg)
+	length = disp.height*(total-vol) // total
 
 	length = disp.height*(total-vol) // total
 	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 	disp.display(volimg)
-
 
 	volume = volumesteps[vol]
 
@@ -411,7 +407,6 @@ else:
 
 kill_processes()
 playstation(stationcounter, graceful=False)
-
 # draw.rectangle( ((0, 34, disp.height-1, disp.width-1)), outline="yellow")
 
 # signal.pause()
