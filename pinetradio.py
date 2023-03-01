@@ -193,13 +193,13 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 
 
 def stwrite3(message):
-	global disp,img,newimg
+	global disp,img,stationimg
 
-	newimg = img.copy()
+	stationimg = img.copy()
 
-	draw = ImageDraw.Draw(newimg)
+	draw = ImageDraw.Draw(stationimg)
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
-	disp.display(newimg)
+	disp.display(stationimg)
 
 
 def send_command(command):
@@ -252,7 +252,7 @@ def sendvolume(volume):
 
 
 def setvol(vol, graceful):
-	global volumetimer,disp,img
+	global volumetimer,disp,img,stationimg,volimg
 
 	volume = volumesteps[vol]
 #	length = disp.height*(100-volume) // 100
@@ -260,9 +260,12 @@ def setvol(vol, graceful):
 	total = len(volumesteps)-1
 	length = disp.height*(total-vol) // total
 
+	volimg = stationimg.copy()
+
+	draw = ImageDraw.Draw(volimg)
 	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
-	disp.display(img)
+	disp.display(volimg)
 
 	try:
 		volumetimer.cancel()
