@@ -22,7 +22,7 @@ STATIONS = [
 
 graceperiod = 2.0 # seconds
 
-volumesteps = [ 0, 30, 40, 50, 60, 70, 80, 90, 100 ]
+volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 startvolstep = 4
 
@@ -166,26 +166,23 @@ def bisectsize( box, a, b, text):
 
 	mid = (b-a) // 2
 
-	if (mid >= 2 ):
+	if (mid == 0 ):
 
-		if ( testsize( box, a+mid, text ) is None ):
-			return bisectsize( box, a, a+mid-1, text)
-
-		else:
-			return bisectsize( box, a+mid+1, b, text)
-
-	else:
 		if not ( testsize( box, b, text) is None ):
 			return b
-
-		if not ( testsize( box, a+mid, text) is None ):
-			return a+mid
 
 		if not ( testsize( box, a, text) is None ):
 			return a
 
 		else:
-			return a-1
+			return testsize( box, a-1, text)
+	else:
+
+		if ( testsize( box, a+mid, text ) is None ):
+			return bisectsize( box, a, a+mid-1, text)
+		else:
+			return bisectsize( box, a+mid+1, b, text)
+
 
 
 def writebox(draw, box, text, fontsize_min, fontsize_max):
@@ -201,12 +198,12 @@ def stwrite3(message):
 	newimg = img.copy()
 
 	draw = ImageDraw.Draw(newimg)
-	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 74)
+	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
 	disp.display(newimg)
 
 
 def send_command(command):
-	# print(command)
+	# print("cmd ",command)
 	print(command, flush=True, file=proc.stdin)
 
 
@@ -214,24 +211,7 @@ def stationplay(stationurl):
 	global proc
 
 	LINE_BUFFERED = 1
-
-	try:
-		send_command('loadfile {0}'.format(stationurl))
-		setvol( vol, graceful=False )
-
-	except:
-		print("starting {}".format(stationurl))
-		proc = subprocess.Popen('mplayer -slave -allow-dangerous-playlist-parsing {}'.format(stationurl).split(),
-			stdin=subprocess.PIPE,
-			stdout=subprocess.PIPE,
-			stderr=subprocess.DEVNULL,
-			universal_newlines=True, bufsize=LINE_BUFFERED)
-
-		setvol( vol, graceful=False )
-
-
-def stationplay1(stationurl):
-	global proc
+	volume = volumesteps[vol]
 
 	try:
 		kill_processes()
@@ -239,10 +219,11 @@ def stationplay1(stationurl):
 	except NameError:
 		pass
 
-	volume = 100
-	proc = subprocess.Popen( 'mplayer -volume {0} -allow-dangerous-playlist-parsing {1}'.format(volume,stationurl).split(),
-		stdout = subprocess.PIPE, stderr = subprocess.DEVNULL )
-
+	proc = subprocess.Popen('/usr/bin/mplayer -slave -idle -allow-dangerous-playlist-parsing -volume {0} 1 {1}'.format(vol,stationurl).split(),
+		stdin=subprocess.PIPE,
+		stdout=subprocess.PIPE,
+		stderr=subprocess.DEVNULL,
+		universal_newlines=True, bufsize=LINE_BUFFERED)
 
 def kill_processes():
 	global proc
@@ -273,15 +254,17 @@ def sendvolume(volume):
 def setvol(vol, graceful):
 	global volumetimer,disp,img
 
-	volume = volumesteps[vol]
-	length = disp.height*(100-volume) // 100
+#	volume = volumesteps[vol]
+#	length = disp.height*(100-volume) // 100
+
+	total = len(volumesteps)-1
+	length = disp.height*(total-vol) // total
 
 	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 	disp.display(img)
 
 	try:
-
 		volumetimer.cancel()
 
 	except NameError:
@@ -290,11 +273,10 @@ def setvol(vol, graceful):
 
 	if (graceful):
 
-		volumetimer = Timer( 0.3, sendvolume, args=( volume, ) )
+		volumetimer = Timer( 1.0, sendvolume, args=( volume, ) )
 		volumetimer.start()
 
 	else:
-
 		sendvolume( volume )
 
 
@@ -356,17 +338,17 @@ def handle_radiobutton1(pin):
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
-def savevol(vol):
-    f = open( volumecfgfile, "w")
-    f.write(str(vol))
-    f.close()
-
 def handle_stationincrement_button(pin):
     global stationcounter
     global play
     stationcounter = (stationcounter+1) % len(STATIONS)
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
+
+def savevol(vol):
+	f = open( volumecfgfile, "w")
+	f.write(str(vol))
+	f.close()
 
 def handle_stationdecrement_button(pin):
     global stationcounter
@@ -376,18 +358,18 @@ def handle_stationdecrement_button(pin):
     playstation(stationcounter, graceful=True)
 
 def handle_volumeincrement_button(pin):
-    global vol
-    if vol < len(volumesteps)-1:
-        vol += 1
-    savevol(vol)
-    setvol(vol, graceful=True)
+	global vol
+	if vol < len(volumesteps)-1:
+		vol += 1
+		savevol(vol)
+		setvol(vol, graceful=False)
 
 def handle_volumedecrement_button(pin):
-    global vol
-    if vol > 0:
-        vol -= 1
-    savevol(vol)
-    setvol(vol, graceful=True)
+	global vol
+	if vol > 0:
+		vol -= 1
+		savevol(vol)
+		setvol(vol, graceful=False)
 
 # Loop through out buttons and attach the "handle_button" function to each
 # We're watching the "FALLING" edge (transition from 3.3V to Ground) and
@@ -425,6 +407,7 @@ else:
 
 kill_processes()
 playstation(stationcounter, graceful=False)
+
 # draw.rectangle( ((0, 34, disp.height-1, disp.width-1)), outline="yellow")
 
 # signal.pause()
