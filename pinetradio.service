@@ -1,5 +1,5 @@
 [Unit]
-Description=Inetradio Service
+Description=pinetradio Service
 After=multi-user.target
 # StartLimitIntervalSec=500
 # StartLimitBurst=5
@@ -9,7 +9,7 @@ Restart=always
 RestartSec=5s
 Type=idle
 User=pi
-ExecStart=/home/pi/inetradio.py
+ExecStart=/home/pi/pinetradio.py
 
 [Install]
 WantedBy=multi-user.target

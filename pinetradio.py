@@ -203,7 +203,8 @@ def stationplay(stationurl):
 	except NameError:
 		pass
 
-	proc = subprocess.Popen( [ 'mplayer', '-allow-dangerous-playlist-parsing', stationurl ],
+	volume = 100
+	proc = subprocess.Popen( 'mplayer -volume {0} -allow-dangerous-playlist-parsing {1}'.format(volume,stationurl).split(),
 		stdout = subprocess.PIPE, stderr = subprocess.DEVNULL )
 
 
@@ -333,8 +334,9 @@ playstation(stationcounter, graceful=False)
 while True:
 	for stdoutline in proc.stdout:
 
+		# print(stdoutline)
+
 		if stdoutline.startswith(b'ICY Info:'):
-			# print(line)
 			# ICY Info: StreamTitle='Nachrichten, ';
 			try:
 				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline.decode('UTF-8'))
