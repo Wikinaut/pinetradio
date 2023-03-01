@@ -112,6 +112,13 @@ def cleardisplay():
 	img = Image.new('RGB', (disp.width, disp.height), color="black")
 	draw = ImageDraw.Draw(img)
 
+	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
+
+	total = len(volumesteps)-1
+	length = disp.height*(total-vol) // total
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
+	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
+
 def stwrite( position, message, font, color ):
 	global disp,img,draw
 	draw.text( position, message, font=font, fill=color)
@@ -200,6 +207,7 @@ def stwrite3(message):
 	draw = ImageDraw.Draw(stationimg)
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
 	disp.display(stationimg)
+	setvol(vol,graceful=True)
 
 
 def send_command(command):
@@ -250,22 +258,22 @@ def handle_button(pin):
 def sendvolume(volume):
 	send_command( 'volume {} 1'.format(volume))
 
-
 def setvol(vol, graceful):
 	global volumetimer,disp,img,stationimg,volimg
 
-	volume = volumesteps[vol]
 #	length = disp.height*(100-volume) // 100
-
 	total = len(volumesteps)-1
-	length = disp.height*(total-vol) // total
 
 	volimg = stationimg.copy()
-
 	draw = ImageDraw.Draw(volimg)
+
+	length = disp.height*(total-vol) // total
 	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 	disp.display(volimg)
+
+
+	volume = volumesteps[vol]
 
 	try:
 		volumetimer.cancel()
@@ -289,8 +297,6 @@ def playstation(stationcounter, graceful):
     station = STATIONS[stationcounter]
 
     cleardisplay()
-
-    draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
     cursor = stwrite( (0,0), "{0}".format( stationcounter+1 ), font, "red" )
@@ -402,11 +408,6 @@ else:
 	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
 	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
 
-# Finally, since button handlers don't require a "while True" loop,
-# we pause the script to prevent it exiting immediately.
-
-# for s in STATIONS:
-#	print(s)
 
 kill_processes()
 playstation(stationcounter, graceful=False)
@@ -420,13 +421,11 @@ while True:
 		# print(stdoutline)
 
 		if stdoutline.startswith('ICY Info:'):
-			# ICY Info: StreamTitle='Nachrichten, ';
+
 			try:
 				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline)
-
 				icyinfo = res.group(1)
 			except:
 				icyinfo = ""
 
-			# print(icyinfo)
 			stwrite3(icyinfo)
