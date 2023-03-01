@@ -22,6 +22,10 @@ STATIONS = [
 
 graceperiod = 2.0 # seconds
 
+volumesteps = [ 0, 30, 40, 50, 60, 70, 80, 90, 100 ]
+
+startvolstep = 4
+
 import signal
 from threading import Timer
 import RPi.GPIO as GPIO
@@ -36,17 +40,26 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-configfile = "/home/pi/pinetradio.cfg"
+stationcfgfile = "/home/pi/pinetradio.station.cfg"
+volumecfgfile = "/home/pi/pinetradio.volume.cfg"
 
 global stationcounter
 
 try:
-	with open( configfile, "r") as f:
+	with open( stationcfgfile, "r") as f:
 		stationcounter = int(f.read())
 		f.close()
 
 except IOError:
 	stationcounter = 0
+
+try:
+	with open( volumecfgfile, "r") as f:
+		vol = int(f.read())
+		f.close()
+
+except IOError:
+	vol = startvolstep
 
 
 # The buttons on Pirate Audio are connected to pins 5, 6, 16 and 24
@@ -151,7 +164,6 @@ def testsize( box, font_size, text):
 
 def bisectsize( box, a, b, text):
 
-	span = b-a
 	mid = (b-a) // 2
 
 	if (mid >= 2 ):
@@ -184,7 +196,7 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 
 
 def stwrite3(message):
-	global disp,img,draw
+	global disp,img,newimg
 
 	newimg = img.copy()
 
@@ -193,12 +205,36 @@ def stwrite3(message):
 	disp.display(newimg)
 
 
+def send_command(command):
+	# print(command)
+	print(command, flush=True, file=proc.stdin)
+
+
 def stationplay(stationurl):
 	global proc
 
+	LINE_BUFFERED = 1
+
 	try:
-		kill_processes(proc.pid)
-		os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
+		send_command('loadfile {0}'.format(stationurl))
+		setvol( vol, graceful=False )
+
+	except:
+		print("starting {}".format(stationurl))
+		proc = subprocess.Popen('mplayer -slave -allow-dangerous-playlist-parsing {}'.format(stationurl).split(),
+			stdin=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.DEVNULL,
+			universal_newlines=True, bufsize=LINE_BUFFERED)
+
+		setvol( vol, graceful=False )
+
+
+def stationplay1(stationurl):
+	global proc
+
+	try:
+		kill_processes()
 
 	except NameError:
 		pass
@@ -208,12 +244,20 @@ def stationplay(stationurl):
 		stdout = subprocess.PIPE, stderr = subprocess.DEVNULL )
 
 
-def kill_processes(pid):
-    '''Kills parent and children processess'''
-    parent = psutil.Process(pid)
-    for child in parent.children(recursive=True):
-        child.kill()
-    parent.kill()
+def kill_processes():
+	global proc
+
+	try:
+		'''Kills parent and children processess'''
+		parent = psutil.Process(proc.pid)
+		for child in parent.children(recursive=True):
+        		child.kill()
+		parent.kill()
+
+	except NameError:
+		pass
+
+	os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
 
 # "handle_button" will be called every time a button is pressed
 # It receives one argument: the associated input pin.
@@ -221,8 +265,41 @@ def handle_button(pin):
     label = LABELS[BUTTONS.index(pin)]
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
+
+def sendvolume(volume):
+	send_command( 'volume {} 1'.format(volume))
+
+
+def setvol(vol, graceful):
+	global volumetimer,disp,img
+
+	volume = volumesteps[vol]
+	length = disp.height*(100-volume) // 100
+
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
+	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
+	disp.display(img)
+
+	try:
+
+		volumetimer.cancel()
+
+	except NameError:
+
+		pass
+
+	if (graceful):
+
+		volumetimer = Timer( 0.3, sendvolume, args=( volume, ) )
+		volumetimer.start()
+
+	else:
+
+		sendvolume( volume )
+
+
 def playstation(stationcounter, graceful):
-    global play,draw,disp
+    global play,draw,disp,img
 
     station = STATIONS[stationcounter]
 
@@ -254,7 +331,7 @@ def playstation(stationcounter, graceful):
         stationplay( station[1] )
 
 def updstationcounter(stationcounter):
-    f = open( configfile, "w")
+    f = open( stationcfgfile, "w")
     f.write(str(stationcounter))
     f.close()
 
@@ -279,6 +356,11 @@ def handle_radiobutton1(pin):
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
+def savevol(vol):
+    f = open( volumecfgfile, "w")
+    f.write(str(vol))
+    f.close()
+
 def handle_stationincrement_button(pin):
     global stationcounter
     global play
@@ -292,6 +374,20 @@ def handle_stationdecrement_button(pin):
     stationcounter = (stationcounter-1) % len(STATIONS)
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
+
+def handle_volumeincrement_button(pin):
+    global vol
+    if vol < len(volumesteps)-1:
+        vol += 1
+    savevol(vol)
+    setvol(vol, graceful=True)
+
+def handle_volumedecrement_button(pin):
+    global vol
+    if vol > 0:
+        vol -= 1
+    savevol(vol)
+    setvol(vol, graceful=True)
 
 # Loop through out buttons and attach the "handle_button" function to each
 # We're watching the "FALLING" edge (transition from 3.3V to Ground) and
@@ -309,10 +405,10 @@ if rotation == 180:
 
 elif rotation == 270:
 
-	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_radiobutton0, bouncetime=250)
-	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_radiobutton1, bouncetime=250)
-	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
 else:
 
@@ -327,6 +423,7 @@ else:
 # for s in STATIONS:
 #	print(s)
 
+kill_processes()
 playstation(stationcounter, graceful=False)
 # draw.rectangle( ((0, 34, disp.height-1, disp.width-1)), outline="yellow")
 
@@ -336,10 +433,10 @@ while True:
 
 		# print(stdoutline)
 
-		if stdoutline.startswith(b'ICY Info:'):
+		if stdoutline.startswith('ICY Info:'):
 			# ICY Info: StreamTitle='Nachrichten, ';
 			try:
-				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline.decode('UTF-8'))
+				res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline)
 
 				icyinfo = res.group(1)
 			except:
