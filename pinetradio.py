@@ -96,33 +96,57 @@ GPIO.setmode(GPIO.BCM)
 # with a "PULL UP", which weakly pulls the input signal to 3.3V.
 GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
+
 # Create ST7789 LCD display class for square LCD
+# Standard display setup for Pirate Audio, except we omit the backlight pin
+SPI_SPEED_MHZ = 90
+rotation = 270
 
 # regarding backlight pin 13, read:
 # https://github.com/pimoroni/pirate-audio/issues/31#issuecomment-678313017
 
-rotation = 270
-
 disp = ST7789.ST7789(
         height=240,
-        rotation=rotation,
-        port=0,
-        cs=ST7789.BG_SPI_CS_FRONT,  # BG_SPI_CS_BACK or BG_SPI_CS_FRONT
-        dc=9,
-        backlight=13,               # 13 for Pirate-Audio; 18 for back BG slot, 19 for front BG slot.
-        spi_speed_hz=80 * 1000 * 1000,
+	rotation=rotation,		# Needed to display the right way up on Pirate Audio
+	port=0,				# SPI port
+	# cs=1,				# SPI port Chip-select channel
+	cs=ST7789.BG_SPI_CS_FRONT,	# BG_SPI_CS_BACK or BG_SPI_CS_FRONT
+	dc=9,				# BCM pin used for data/command
+	backlight=None,			# We'll control the backlight ourselves
+	# backlight=13,			# 13 for Pirate-Audio; 18 for back BG slot, 19 for front BG slot.
+	spi_speed_hz=SPI_SPEED_MHZ * 1000 * 1000,
         offset_left=0,
         offset_top=0
-    )
-
+)
 
 def cleardisplay():
-	global disp,img,draw
-
-	# Initialize display.
-	disp.begin()
+	global img,draw
 	img = Image.new('RGB', (disp.width, disp.height), color="black")
 	draw = ImageDraw.Draw(img)
+
+
+def setupdisplay():
+	global disp,img,draw,backlight
+
+	# Initialize display.
+	# disp.begin()
+
+	GPIO.setmode(GPIO.BCM)
+
+	# We must set the backlight pin up as an output first
+	GPIO.setup(13, GPIO.OUT)
+
+	# Set up our pin as a PWM output at 500Hz
+	backlight = GPIO.PWM(13, 500)
+
+	# Start the PWM at 100% duty cycle
+	backlight.start(100)
+
+	# brightness = 50
+	# backlight.ChangeDutyCycle(brightness)
+	# backlight.stop()
+
+	cleardisplay()
 
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
@@ -389,105 +413,41 @@ def handle_volumedecrement_button(pin):
 		savevol(vol)
 		setvol(vol, graceful=False)
 
-#	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-#	cursor = stwrite( (0,0), "Shutdown", font, "red" )
-#	sys.exit(0)
 
-# Loop through out buttons and attach the "handle_button" function to each
-# We're watching the "FALLING" edge (transition from 3.3V to Ground) and
-# picking a generous bouncetime of 100ms to smooth out button presses.
+def setup_button_handlers(rotation):
+	# Loop through out buttons and attach the "handle_button" function to each
+	# We're watching the "FALLING" edge (transition from 3.3V to Ground) and
+	# picking a generous bouncetime of 100ms to smooth out button presses.
 
-# for pin in BUTTONS:
-#    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
+	# for pin in BUTTONS:
+	#    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
 
-if rotation == 180:
+	if rotation == 180:
 
-	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton0, bouncetime=250)
-	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_radiobutton1, bouncetime=250)
-	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton0, bouncetime=250)
+		GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_radiobutton1, bouncetime=250)
+		GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
 
-elif rotation == 270:
+	elif rotation == 270:
 
-	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
-	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
-	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
-else:
+	else:
 
-	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
-
-
-
-"""
-backlight-pwm.py - Demonstrate the backlight being controlled by PWM
-
-This advanced example shows you how to achieve a variable backlight
-brightness using PWM.
-
-Instead of providing a backlight pin to ST7789, we set it up using
-RPi.GPIO's PWM functionality with a fixed frequency and adjust the
-duty cycle to change brightness.
-
-Press Ctrl+C to exit!
-"""
-
-SPI_SPEED_MHZ = 90
-
-# Give us an image buffer to draw into
-image = Image.new("RGB", (240, 240), (255, 0, 255))
-draw = ImageDraw.Draw(image)
-
-# Standard display setup for Pirate Audio, except we omit the backlight pin
-st7789 = ST7789(
-    rotation=90,     # Needed to display the right way up on Pirate Audio
-    port=0,          # SPI port
-    cs=1,            # SPI port Chip-select channel
-    dc=9,            # BCM pin used for data/command
-    backlight=None,  # We'll control the backlight ourselves
-    spi_speed_hz=SPI_SPEED_MHZ * 1000 * 1000
-)
-
-GPIO.setmode(GPIO.BCM)
-
-# We must set the backlight pin up as an output first
-GPIO.setup(13, GPIO.OUT)
-
-# Set up our pin as a PWM output at 500Hz
-backlight = GPIO.PWM(13, 500)
-
-# Start the PWM at 100% duty cycle
-backlight.start(100)
-
-while True:
-    # Using math.sin() we can convert the linear progression of time into
-    # a sine wave, shift it up by +1 to eliminate the negative component
-    # and divide by two to give us a range of 0.0 - 1.0 which we can then
-    # multiply by 100 to get our duty cycle percentage.
-    # Of course - this is purely for this demonstration and you'll likely
-    # do something much simpler to pick your brightness!
-    brightness = ((math.sin(time.time()) + 1) / 2.0) * 100
-    backlight.ChangeDutyCycle(brightness)
-
-    draw.rectangle((0, 0, 240, 240), (255, 0, 255))
-
-    # Draw a handy on-screen bar to show us the current brightness
-    bar_width = int((220 / 100.0) * brightness)
-    draw.rectangle((10, 220, 10 + bar_width, 230), (255, 255, 255))
-    
-    # Display the resulting image
-    st7789.display(image)
-    time.sleep(1.0 / 30)
-
-backlight.stop()
-
+		GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
+		GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
+		GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+		GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
 
 
 if __name__ == '__main__':
+
+	setupdisplay()
+	setup_button_handlers(rotation)
 
 	killer = GracefulKiller()
 
@@ -522,3 +482,22 @@ if __name__ == '__main__':
 	draw = ImageDraw.Draw(img)
 	stwrite3("Goodbye my darling!\n\nPinetradio schaltet sich nun aus.")
 	kill_processes()
+
+	# brightness = 50
+	time.sleep(5)
+
+	def big(text):
+
+		disp.display(img)
+		img2 = img.copy()
+		draw = ImageDraw.Draw(img2)
+		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 270)
+		draw.text( ( 120, 120), text, font=font, fill="cyan", anchor="mm" )
+		disp.display(img2)
+		time.sleep(0.3)
+
+	big("3")
+	big("2")
+	big("1")
+	big("0")
+	backlight.stop()
