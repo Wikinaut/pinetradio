@@ -203,10 +203,10 @@ def stwrite3(message):
 	global disp,img,stationimg
 
 	stationimg = img.copy()
+	draw = ImageDraw.Draw(stationimg)
 
-	draw = ImageDraw.Draw(newimg)
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
-	disp.display(newimg)
+	disp.display(stationimg)
 
 
 def send_command(command):
@@ -264,7 +264,8 @@ def setvol(vol, graceful):
 	total = len(volumesteps)-1
 	length = disp.height*(total-vol) // total
 
-	length = disp.height*(total-vol) // total
+	volimg = stationimg.copy()
+	draw = ImageDraw.Draw(volimg)
 	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 	disp.display(volimg)
