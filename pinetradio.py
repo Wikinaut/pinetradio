@@ -204,9 +204,9 @@ def stwrite3(message):
 
 	stationimg = img.copy()
 
-	draw = ImageDraw.Draw(newimg)
+	draw = ImageDraw.Draw(stationimg)
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
-	disp.display(newimg)
+	disp.display(stationimg)
 
 
 def send_command(command):
