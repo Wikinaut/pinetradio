@@ -96,7 +96,6 @@ GPIO.setmode(GPIO.BCM)
 # with a "PULL UP", which weakly pulls the input signal to 3.3V.
 GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-
 # Create ST7789 LCD display class for square LCD
 # Standard display setup for Pirate Audio, except we omit the backlight pin
 SPI_SPEED_MHZ = 90
@@ -146,7 +145,8 @@ def setupdisplay():
 	backlight = GPIO.PWM(13, 100)
 
 	# Start the PWM at 100% duty cycle
-	backlight.start(100)
+	# backlight.start(100)
+	retriggerbacklight(dutycycle=100,timeout=120)
 
 	# brightness = 50
 	# backlight.ChangeDutyCycle(brightness)
@@ -154,6 +154,28 @@ def setupdisplay():
 
 	cleardisplay()
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
+
+def setbacklight(dutycycle):
+	global backlight
+	backlight.ChangeDutyCycle(dutycycle)
+
+def retriggerbacklight(dutycycle,timeout):
+	# returns True if backlight was on
+
+	global backlighttimer
+
+	try:
+		is_triggered = not backlighttimer.finished.is_set()
+		backlighttimer.cancel()
+
+	except:
+		is_triggered = True
+
+	backlighttimer = Timer( timeout, setbacklight, args=( 0, ) )
+	backlighttimer.start()
+	backlight.start(dutycycle)
+
+	return is_triggered
 
 def stwrite( position, message, font, color ):
 	global disp,img,draw
@@ -375,27 +397,38 @@ def handle_radiobutton1(pin):
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
+
 def handle_stationincrement_button(pin):
-    global stationcounter
-    global play
-    stationcounter = (stationcounter+1) % len(STATIONS)
-    updstationcounter(stationcounter)
-    playstation(stationcounter, graceful=True)
+	global stationcounter
+
+	if not retriggerbacklight(dutycycle=100,timeout=20):
+		return
+
+	stationcounter = (stationcounter+1) % len(STATIONS)
+	updstationcounter(stationcounter)
+	playstation(stationcounter, graceful=True)
+
+def handle_stationdecrement_button(pin):
+	global stationcounter
+
+	if not retriggerbacklight(dutycycle=100,timeout=20):
+		return
+
+	stationcounter = (stationcounter-1) % len(STATIONS)
+	updstationcounter(stationcounter)
+	playstation(stationcounter, graceful=True)
 
 def savevol(vol):
 	f = open( volumecfgfile, "w")
 	f.write(str(vol))
 	f.close()
 
-def handle_stationdecrement_button(pin):
-    global stationcounter
-    global play
-    stationcounter = (stationcounter-1) % len(STATIONS)
-    updstationcounter(stationcounter)
-    playstation(stationcounter, graceful=True)
-
 def handle_volumeincrement_button(pin):
 	global vol
+
+	if not retriggerbacklight(dutycycle=100,timeout=20):
+		return
+
 	if vol < len(volumesteps)-1:
 		vol += 1
 		savevol(vol)
@@ -403,6 +436,10 @@ def handle_volumeincrement_button(pin):
 
 def handle_volumedecrement_button(pin):
 	global vol
+
+	if not retriggerbacklight(dutycycle=100,timeout=20):
+		return
+
 	if vol > 0:
 		vol -= 1
 		savevol(vol)
@@ -474,6 +511,8 @@ if __name__ == '__main__':
 				stwrite3(icyinfo)
 
 	print("End of the program. I was killed gracefully :)")
+
+	retriggerbacklight( dutycycle=100, timeout= 5 )
 
 	img = Image.new('RGB', (disp.width, disp.height), color="white")
 	draw = ImageDraw.Draw(img)
