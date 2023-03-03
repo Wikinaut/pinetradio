@@ -21,6 +21,7 @@ STATIONS = [
 ]
 
 graceperiod = 2.0 # seconds
+buttonBacklightTimeout = 60
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
@@ -401,7 +402,7 @@ def handle_radiobutton1(pin):
 def handle_stationincrement_button(pin):
 	global stationcounter
 
-	if not retriggerbacklight(dutycycle=100,timeout=20):
+	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 		return
 
 	stationcounter = (stationcounter+1) % len(STATIONS)
@@ -411,7 +412,7 @@ def handle_stationincrement_button(pin):
 def handle_stationdecrement_button(pin):
 	global stationcounter
 
-	if not retriggerbacklight(dutycycle=100,timeout=20):
+	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 		return
 
 	stationcounter = (stationcounter-1) % len(STATIONS)
@@ -426,8 +427,8 @@ def savevol(vol):
 def handle_volumeincrement_button(pin):
 	global vol
 
-	if not retriggerbacklight(dutycycle=100,timeout=20):
-		return
+	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+		pass
 
 	if vol < len(volumesteps)-1:
 		vol += 1
@@ -437,8 +438,8 @@ def handle_volumeincrement_button(pin):
 def handle_volumedecrement_button(pin):
 	global vol
 
-	if not retriggerbacklight(dutycycle=100,timeout=20):
-		return
+	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+		pass
 
 	if vol > 0:
 		vol -= 1
