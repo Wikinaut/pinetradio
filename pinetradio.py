@@ -128,8 +128,8 @@ def cleardisplay():
 def showvolume(draw):
 	total = len(volumesteps)-1
 	length = disp.height*(total-vol) // total
-	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), width=3, fill="red" )
-	draw.line( (disp.width-1,length-1,disp.width-1,0), width=1, fill="yellow" )
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
+	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 
 def setupdisplay():
 	global disp,img,draw,backlight
