@@ -128,8 +128,8 @@ def cleardisplay():
 def showvolume(draw):
 	total = len(volumesteps)-1
 	length = disp.height*(total-vol) // total
-	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
-	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), width=3, fill="red" )
+	draw.line( (disp.width-1,length-1,disp.width-1,0), width=1, fill="yellow" )
 
 def setupdisplay():
 	global disp,img,draw,backlight
@@ -207,7 +207,7 @@ def testsize( box, font_size, text):
 
 def bisectsize( box, a, b, text):
 
-	mid = (b-a) // 2
+	mid = abs(b-a) // 2
 
 	if (mid == 0 ):
 
@@ -243,9 +243,7 @@ def stwrite3(message):
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
 	disp.display(stationimg)
 
-
 def send_command(command):
-	# print("cmd ",command)
 	try:
 		print(command, flush=True, file=proc.stdin)
 	except:
@@ -296,10 +294,6 @@ def sendvolume(volume):
 
 def setvol(vol, graceful):
 	global volumetimer,disp,img,stationimg,volimg
-
-#	length = disp.height*(100-volume) // 100
-	total = len(volumesteps)-1
-	length = disp.height*(total-vol) // total
 
 	volimg = stationimg.copy()
 	draw = ImageDraw.Draw(volimg)
