@@ -21,10 +21,14 @@ STATIONS = [
 ]
 
 graceperiod = 2.0 # seconds
-buttonBacklightTimeout = 60
+
+startupBacklightTimeout = 30
+buttonBacklightTimeout = 5
+
+fullBacklight = 100
+dimmedBacklight = 10
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
-
 startvolstep = 4
 
 import signal
@@ -38,6 +42,12 @@ import math
 import subprocess
 import psutil
 import ST7789
+
+# for PWM control of backlight
+# sudo systemctl enable pigpiod; sudo systemctl start pipgpiod
+import pigpio
+backlightpin = 13
+
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -132,7 +142,7 @@ def showvolume(draw):
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 
 def setupdisplay():
-	global disp,img,draw,backlight
+	global disp,img,draw
 
 	# Initialize display.
 	# disp.begin()
@@ -140,28 +150,24 @@ def setupdisplay():
 	GPIO.setmode(GPIO.BCM)
 
 	# We must set the backlight pin up as an output first
-	GPIO.setup(13, GPIO.OUT)
+	### GPIO.setup(13, GPIO.OUT)
 
 	# Set up our pin as a PWM output at 500Hz
-	backlight = GPIO.PWM(13, 100)
+	### backlight = GPIO.PWM(13, 2000)
 
 	# Start the PWM at 100% duty cycle
 	# backlight.start(100)
-	retriggerbacklight(dutycycle=100,timeout=120)
-
-	# brightness = 50
-	# backlight.ChangeDutyCycle(brightness)
-	# backlight.stop()
+	retriggerbacklight(dutycycle=fullBacklight,timeout=startupBacklightTimeout)
 
 	cleardisplay()
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
 def setbacklight(dutycycle):
-	global backlight
-	backlight.ChangeDutyCycle(dutycycle)
+	pi.set_PWM_dutycycle(backlightpin,dutycycle)
 
 def retriggerbacklight(dutycycle,timeout):
 	# returns True if backlight was on
+	# timeout < 0 clears he timer
 
 	global backlighttimer
 
@@ -172,11 +178,13 @@ def retriggerbacklight(dutycycle,timeout):
 	except:
 		is_triggered = True
 
-	backlighttimer = Timer( timeout, setbacklight, args=( 0, ) )
-	backlighttimer.start()
-	backlight.start(dutycycle)
+	if ( timeout >= 0 ):
+		backlighttimer = Timer( timeout, setbacklight, args=( dimmedBacklight, ) )
+		backlighttimer.start()
+		setbacklight(dutycycle)
 
 	return is_triggered
+
 
 def stwrite( position, message, font, color ):
 	global disp,img,draw
@@ -402,7 +410,7 @@ def handle_radiobutton1(pin):
 def handle_stationincrement_button(pin):
 	global stationcounter
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+	if not retriggerbacklight(dutycycle=fullBacklight,timeout=buttonBacklightTimeout):
 		return
 
 	stationcounter = (stationcounter+1) % len(STATIONS)
@@ -412,7 +420,7 @@ def handle_stationincrement_button(pin):
 def handle_stationdecrement_button(pin):
 	global stationcounter
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+	if not retriggerbacklight(dutycycle=fullBacklight,timeout=buttonBacklightTimeout):
 		return
 
 	stationcounter = (stationcounter-1) % len(STATIONS)
@@ -427,7 +435,7 @@ def savevol(vol):
 def handle_volumeincrement_button(pin):
 	global vol
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+	if not retriggerbacklight(dutycycle=fullBacklight,timeout=buttonBacklightTimeout):
 		pass
 
 	if vol < len(volumesteps)-1:
@@ -438,7 +446,7 @@ def handle_volumeincrement_button(pin):
 def handle_volumedecrement_button(pin):
 	global vol
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+	if not retriggerbacklight(dutycycle=fullBacklight,timeout=buttonBacklightTimeout):
 		pass
 
 	if vol > 0:
@@ -479,18 +487,16 @@ def setup_button_handlers(rotation):
 
 if __name__ == '__main__':
 
+	pi = pigpio.pi() # connect pigpiod to local Pi
+	pi.set_PWM_range(backlightpin, 100)
+
 	setupdisplay()
 	setup_button_handlers(rotation)
-	# backlight.ChangeDutyCycle(50)
 
 	killer = GracefulKiller()
 
 	kill_processes()
 	playstation(stationcounter, graceful=False)
-	# draw.rectangle( ((0, 34, disp.height-1, disp.width-1)), outline="yellow")
-
-	# signal.pause()
-	# while True:
 
 	while not killer.killed:
 
@@ -498,8 +504,6 @@ if __name__ == '__main__':
 
 			if killer.killed:
 				break
-
-			# print(stdoutline)
 
 			if stdoutline.startswith('ICY Info:'):
 
@@ -511,10 +515,7 @@ if __name__ == '__main__':
 
 				stwrite3(icyinfo)
 
-	print("End of the program. I was killed gracefully :)")
-
-	retriggerbacklight( dutycycle=100, timeout= 5 )
-
+	setbacklight(100)
 	img = Image.new('RGB', (disp.width, disp.height), color="white")
 	draw = ImageDraw.Draw(img)
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
@@ -522,8 +523,7 @@ if __name__ == '__main__':
 	disp.display(img)
 
 	kill_processes()
-	# backlight.ChangeDutyCycle(60)
-	time.sleep(1)
+	time.sleep(0.1)
 
 	def big(text):
 
@@ -532,12 +532,16 @@ if __name__ == '__main__':
 		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 270)
 		draw.text( ( 120, 120), text, font=font, fill="white", anchor="mm" )
 		disp.display(img)
-		time.sleep(0.3)
+		time.sleep(0.1)
 
 	big("3")
 	big("2")
 	big("1")
 	big("0")
-	backlight.stop()
+
+	setbacklight(0)
 	cleardisplay()
 	disp.display(img)
+
+	pi.stop()
+	print("End of pinetradio. I was killed gracefully :)")
