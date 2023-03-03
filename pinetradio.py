@@ -483,7 +483,7 @@ if __name__ == '__main__':
 
 	img = Image.new('RGB', (disp.width, disp.height), color="white")
 	draw = ImageDraw.Draw(img)
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 70)
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
 	draw.text( ( 120, 120), "Good\nbye", font=font, fill="black", anchor="mm" )
 	disp.display(img)
 
