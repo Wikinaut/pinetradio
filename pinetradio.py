@@ -120,10 +120,16 @@ disp = ST7789.ST7789(
 )
 
 def cleardisplay():
-	global img,draw
+	global img,draw,stationimg
 	img = Image.new('RGB', (disp.width, disp.height), color="black")
+	stationimg = img.copy()
 	draw = ImageDraw.Draw(img)
 
+def showvolume(draw):
+	total = len(volumesteps)-1
+	length = disp.height*(total-vol) // total
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
+	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 
 def setupdisplay():
 	global disp,img,draw,backlight
@@ -137,7 +143,7 @@ def setupdisplay():
 	GPIO.setup(13, GPIO.OUT)
 
 	# Set up our pin as a PWM output at 500Hz
-	backlight = GPIO.PWM(13, 500)
+	backlight = GPIO.PWM(13, 100)
 
 	# Start the PWM at 100% duty cycle
 	backlight.start(100)
@@ -147,13 +153,7 @@ def setupdisplay():
 	# backlight.stop()
 
 	cleardisplay()
-
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
-
-	total = len(volumesteps)-1
-	length = disp.height*(total-vol) // total
-	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
-	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 
 def stwrite( position, message, font, color ):
 	global disp,img,draw
@@ -164,7 +164,7 @@ def stwrite( position, message, font, color ):
 # wrap text into display width
 # https://stackoverflow.com/questions/8257147/wrap-text-in-pil
 def get_wrapped_text(text: str, font: ImageFont.ImageFont,
-                     line_length_in_pixels: int):
+		line_length_in_pixels: int):
 	lines = ['']
 
 #	split and keep the separators:
@@ -227,7 +227,6 @@ def bisectsize( box, a, b, text):
 			return bisectsize( box, a+mid+1, b, text)
 
 
-
 def writebox(draw, box, text, fontsize_min, fontsize_max):
 	global disp,wrappedtext,font
 
@@ -247,8 +246,10 @@ def stwrite3(message):
 
 def send_command(command):
 	# print("cmd ",command)
-	print(command, flush=True, file=proc.stdin)
-
+	try:
+		print(command, flush=True, file=proc.stdin)
+	except:
+		pass
 
 def stationplay(stationurl):
 	global proc
@@ -302,8 +303,7 @@ def setvol(vol, graceful):
 
 	volimg = stationimg.copy()
 	draw = ImageDraw.Draw(volimg)
-	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
-	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
+	showvolume(draw)
 	disp.display(volimg)
 
 	volume = volumesteps[vol]
@@ -325,24 +325,25 @@ def setvol(vol, graceful):
 
 
 def playstation(stationcounter, graceful):
-    global play,draw,disp,img
+    global play,draw,disp,img,stationimg
 
     station = STATIONS[stationcounter]
 
     cleardisplay()
+    draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
     cursor = stwrite( (0,0), "{0}".format( stationcounter+1 ), font, "red" )
     cursor = stwrite( cursor, " {0}".format( station[0] ), font, "white" )
 
+    stationimg = img.copy()
+    showvolume(draw)
     disp.display(img)
 
     try:
-
         play.cancel()
 
     except NameError:
-
         pass
 
     if (graceful):
@@ -448,6 +449,7 @@ if __name__ == '__main__':
 
 	setupdisplay()
 	setup_button_handlers(rotation)
+	# backlight.ChangeDutyCycle(50)
 
 	killer = GracefulKiller()
 
@@ -478,22 +480,24 @@ if __name__ == '__main__':
 				stwrite3(icyinfo)
 
 	print("End of the program. I was killed gracefully :)")
-	img = Image.new('RGB', (disp.width, disp.height), color="red")
-	draw = ImageDraw.Draw(img)
-	stwrite3("Goodbye my darling!\n\nPinetradio schaltet sich nun aus.")
-	kill_processes()
 
-	# brightness = 50
-	time.sleep(5)
+	img = Image.new('RGB', (disp.width, disp.height), color="white")
+	draw = ImageDraw.Draw(img)
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 70)
+	draw.text( ( 120, 120), "Good\nbye", font=font, fill="black", anchor="mm" )
+	disp.display(img)
+
+	kill_processes()
+	# backlight.ChangeDutyCycle(60)
+	time.sleep(1)
 
 	def big(text):
 
-		disp.display(img)
-		img2 = img.copy()
-		draw = ImageDraw.Draw(img2)
+		img = Image.new('RGB', (disp.width, disp.height), color="black")
+		draw = ImageDraw.Draw(img)
 		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 270)
-		draw.text( ( 120, 120), text, font=font, fill="cyan", anchor="mm" )
-		disp.display(img2)
+		draw.text( ( 120, 120), text, font=font, fill="white", anchor="mm" )
+		disp.display(img)
 		time.sleep(0.3)
 
 	big("3")
@@ -501,3 +505,5 @@ if __name__ == '__main__':
 	big("1")
 	big("0")
 	backlight.stop()
+	cleardisplay()
+	disp.display(img)
