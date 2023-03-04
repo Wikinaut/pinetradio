@@ -26,6 +26,7 @@ buttonBacklightTimeout = 60
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 startvolstep = 4
+muted = False
 
 import signal
 from threading import Timer
@@ -67,6 +68,8 @@ except IOError:
 class GracefulKiller:
 
 	killed = False
+	shutdown = False
+
 	def __init__(self):
 		signal.signal(signal.SIGINT, self.exit_gracefully)
 		signal.signal(signal.SIGTERM, self.exit_gracefully)
@@ -125,10 +128,10 @@ def cleardisplay():
 	stationimg = img.copy()
 	draw = ImageDraw.Draw(img)
 
-def showvolume(draw):
+def showvolume(draw,color):
 	total = len(volumesteps)-1
 	length = disp.height*(total-vol) // total
-	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill="red" )
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill=color )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
 
 def setupdisplay():
@@ -320,7 +323,7 @@ def setvol(vol, graceful):
 
 	volimg = stationimg.copy()
 	draw = ImageDraw.Draw(volimg)
-	showvolume(draw)
+	showvolume(draw,"red")
 	disp.display(volimg)
 
 	volume = volumesteps[vol]
@@ -354,7 +357,7 @@ def playstation(stationcounter, graceful):
     cursor = stwrite( cursor, " {0}".format( station[0] ), font, "white" )
 
     stationimg = img.copy()
-    showvolume(draw)
+    showvolume(draw,"red")
     disp.display(img)
 
     try:
@@ -425,10 +428,16 @@ def savevol(vol):
 	f.close()
 
 def handle_volumeincrement_button(pin):
-	global vol
+	global vol,muted
 
 	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 		pass
+
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
+		return
 
 	if vol < len(volumesteps)-1:
 		vol += 1
@@ -436,10 +445,71 @@ def handle_volumeincrement_button(pin):
 		setvol(vol, graceful=False)
 
 def handle_volumedecrement_button(pin):
-	global vol
+	global vol,muted
 
 	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 		pass
+
+	starttime = time.time()
+
+	while GPIO.input(pin) == 0 and time.time()-starttime < 2:
+		time.sleep(0.1)
+
+	if time.time()-starttime >= 2:
+
+		if muted:
+
+			muted = False
+			send_command("mute 0")
+			#cleardisplay()
+			#img = Image.new('RGB', (disp.width, disp.height), color="black")
+			#draw = ImageDraw.Draw(img)
+			#font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
+			#draw.text( ( 120, 120), "unmuted", font=font, fill="white", anchor="mm" )
+			#disp.display(img)
+
+			time.sleep(3)
+			return
+
+		else:
+
+			muted = True
+			send_command("mute 1")
+			volimg = stationimg.copy()
+			draw = ImageDraw.Draw(volimg)
+			showvolume(draw, "blue")
+			disp.display(volimg)
+			#cleardisplay()
+			#img = Image.new('RGB', (disp.width, disp.height), color="black")
+			#draw = ImageDraw.Draw(img)
+			#font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
+			#draw.text( ( 120, 120), "muted", font=font, fill="white", anchor="mm" )
+			#disp.display(img)
+
+			while GPIO.input(pin) == 0 and time.time()-starttime < 4:
+				time.sleep(0.1)
+				# print("0 2-",time.time()-starttime)
+
+			if time.time()-starttime > 4:
+
+				cleardisplay()
+				img = Image.new('RGB', (disp.width, disp.height), color="red")
+				draw = ImageDraw.Draw(img)
+				font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
+				draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
+				disp.display(img)
+
+				time.sleep(3)
+				killer.killed = True
+				killer.shutdown = True
+
+			return
+
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
+		return
 
 	if vol > 0:
 		vol -= 1
@@ -481,16 +551,11 @@ if __name__ == '__main__':
 
 	setupdisplay()
 	setup_button_handlers(rotation)
-	# backlight.ChangeDutyCycle(50)
 
 	killer = GracefulKiller()
 
 	kill_processes()
 	playstation(stationcounter, graceful=False)
-	# draw.rectangle( ((0, 34, disp.height-1, disp.width-1)), outline="yellow")
-
-	# signal.pause()
-	# while True:
 
 	while not killer.killed:
 
@@ -498,8 +563,6 @@ if __name__ == '__main__':
 
 			if killer.killed:
 				break
-
-			# print(stdoutline)
 
 			if stdoutline.startswith('ICY Info:'):
 
@@ -513,16 +576,15 @@ if __name__ == '__main__':
 
 	print("End of the program. I was killed gracefully :)")
 
-	retriggerbacklight( dutycycle=100, timeout= 5 )
+	setbacklight(100)
 
-	img = Image.new('RGB', (disp.width, disp.height), color="white")
+	img = Image.new('RGB', (disp.width, disp.height), color="red")
 	draw = ImageDraw.Draw(img)
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
-	draw.text( ( 120, 120), "Good\nbye", font=font, fill="black", anchor="mm" )
+	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
 	disp.display(img)
 
 	kill_processes()
-	# backlight.ChangeDutyCycle(60)
 	time.sleep(1)
 
 	def big(text):
@@ -538,6 +600,11 @@ if __name__ == '__main__':
 	big("2")
 	big("1")
 	big("0")
+	setbacklight(0)
 	backlight.stop()
 	cleardisplay()
 	disp.display(img)
+
+	if killer.shutdown:
+		print("Shutdown")
+		os.system("sudo shutdown -h now")
