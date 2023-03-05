@@ -150,7 +150,7 @@ def setupdisplay():
 
 	# Start the PWM at 100% duty cycle
 	# backlight.start(100)
-	retriggerbacklight(dutycycle=100,timeout=120)
+	triggerdisplay()
 
 	# brightness = 50
 	# backlight.ChangeDutyCycle(brightness)
@@ -169,17 +169,17 @@ def retriggerbacklight(dutycycle,timeout):
 	global backlighttimer
 
 	try:
-		is_triggered = not backlighttimer.finished.is_set()
+		is_backlightOn = not backlighttimer.finished.is_set()
 		backlighttimer.cancel()
 
 	except:
-		is_triggered = True
+		is_backlightOn = True
 
+	backlight.start(dutycycle)
 	backlighttimer = Timer( timeout, setbacklight, args=( 0, ) )
 	backlighttimer.start()
-	backlight.start(dutycycle)
 
-	return is_triggered
+	return is_backlightOn
 
 def stwrite( position, message, font, color ):
 	global disp,img,draw
@@ -314,7 +314,6 @@ def handle_button(pin):
     label = LABELS[BUTTONS.index(pin)]
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
-
 def sendvolume(volume):
 	send_command( 'volume {} 1'.format(volume))
 
@@ -402,25 +401,42 @@ def handle_radiobutton1(pin):
     playstation(stationcounter, graceful=True)
 
 
+def triggerdisplay():
+	return not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout)
+
 def handle_stationincrement_button(pin):
 	global stationcounter
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+	if triggerdisplay():
 		return
 
 	stationcounter = (stationcounter+1) % len(STATIONS)
 	updstationcounter(stationcounter)
 	playstation(stationcounter, graceful=True)
 
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
+
+
 def handle_stationdecrement_button(pin):
 	global stationcounter
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
+	showvolume()
+
+	if triggerdisplay():
 		return
 
 	stationcounter = (stationcounter-1) % len(STATIONS)
 	updstationcounter(stationcounter)
 	playstation(stationcounter, graceful=True)
+
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
+
 
 def savevol(vol):
 	f = open( volumecfgfile, "w")
@@ -430,8 +446,8 @@ def savevol(vol):
 def handle_volumeincrement_button(pin):
 	global vol,muted
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
-		pass
+	if triggerdisplay():
+		return
 
 	if muted:
 		muted = False
@@ -447,27 +463,20 @@ def handle_volumeincrement_button(pin):
 def handle_volumedecrement_button(pin):
 	global vol,muted
 
-	if not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
-		pass
+	if triggerdisplay():
+		return
 
 	starttime = time.time()
 
-	while GPIO.input(pin) == 0 and time.time()-starttime < 2:
+	while GPIO.input(pin) == 0 and time.time()-starttime < 0.8:
 		time.sleep(0.1)
 
-	if time.time()-starttime >= 2:
+	if time.time()-starttime >= 0.8:
 
 		if muted:
 
 			muted = False
 			send_command("mute 0")
-			#cleardisplay()
-			#img = Image.new('RGB', (disp.width, disp.height), color="black")
-			#draw = ImageDraw.Draw(img)
-			#font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
-			#draw.text( ( 120, 120), "unmuted", font=font, fill="white", anchor="mm" )
-			#disp.display(img)
-
 			time.sleep(3)
 			return
 
@@ -475,22 +484,16 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
+
 			volimg = stationimg.copy()
 			draw = ImageDraw.Draw(volimg)
 			showvolume(draw, "blue")
 			disp.display(volimg)
-			#cleardisplay()
-			#img = Image.new('RGB', (disp.width, disp.height), color="black")
-			#draw = ImageDraw.Draw(img)
-			#font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 45)
-			#draw.text( ( 120, 120), "muted", font=font, fill="white", anchor="mm" )
-			#disp.display(img)
 
-			while GPIO.input(pin) == 0 and time.time()-starttime < 4:
+			while GPIO.input(pin) == 0 and time.time()-starttime < 3:
 				time.sleep(0.1)
-				# print("0 2-",time.time()-starttime)
 
-			if time.time()-starttime > 4:
+			if time.time()-starttime > 3:
 
 				cleardisplay()
 				img = Image.new('RGB', (disp.width, disp.height), color="red")
@@ -525,26 +528,12 @@ def setup_button_handlers(rotation):
 	# for pin in BUTTONS:
 	#    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
 
-	if rotation == 180:
+	# rotation == 270
 
-		GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton0, bouncetime=250)
-		GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_radiobutton1, bouncetime=250)
-		GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-		GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
-
-	elif rotation == 270:
-
-		GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-		GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
-		GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
-		GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
-
-	else:
-
-		GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-		GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_radiobutton, bouncetime=250)
-		GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-		GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
+	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
 
 if __name__ == '__main__':
