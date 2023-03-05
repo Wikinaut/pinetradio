@@ -23,11 +23,13 @@ STATIONS = [
 graceperiod = 1.0 # seconds between new station is actually selected
 buttonBacklightTimeout = 60
 mutedBacklightTimeout = 3
+icyBacklightTimeout = 10
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 startvolstep = 4
 muted = False
+last_icyinfo = ""
 
 import signal
 from threading import Timer
@@ -581,7 +583,10 @@ if __name__ == '__main__':
 				except:
 					icyinfo = ""
 
-				stwrite3(icyinfo)
+				if icyinfo != last_icyinfo:
+					stwrite3(icyinfo)
+					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
+					last_icyinfo = icyinfo
 
 	print("End of the program. I was killed gracefully :)")
 
