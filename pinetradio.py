@@ -36,6 +36,7 @@ import sys
 import os
 import re
 import time
+from datetime import datetime
 import math
 import subprocess
 import psutil
@@ -122,6 +123,12 @@ disp = ST7789.ST7789(
         offset_left=0,
         offset_top=0
 )
+
+def now():
+	currentDateAndTime = datetime.now()
+
+	currentTime = currentDateAndTime.strftime("%H:%M:%S")
+	return currentTime
 
 def cleardisplay():
 	global img,draw,stationimg
@@ -406,7 +413,6 @@ def triggerdisplay():
 		timeout = mutedBacklightTimeout
 	else:
 		timeout = buttonBacklightTimeout
-	print("timeout ",timeout)
 	return not retriggerbacklight(dutycycle=100,timeout=timeout)
 
 def handle_stationincrement_button(pin):
@@ -500,9 +506,8 @@ def handle_volumedecrement_button(pin):
 			send_command("mute 1")
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
-			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
-			draw.text( ( 120, 120), "muted", font=font, fill="white", anchor="mm" )
-			# stwrite3("Press any button to unmute")
+			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
+			draw.text( ( 120, 120), "muted\n\n{0}".format(now()), font=font, fill="white", anchor="mm" )
 			disp.display(img)
 			triggerdisplay()
 
