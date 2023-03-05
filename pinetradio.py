@@ -20,9 +20,9 @@ STATIONS = [
 	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
 ]
 
-graceperiod = 2.0 # seconds
+graceperiod = 1.0 # seconds between new station is actually selected
 buttonBacklightTimeout = 60
-mutedBacklightTimeout = 5
+mutedBacklightTimeout = 3
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
@@ -337,7 +337,7 @@ def setvol(vol, graceful):
 
 	if (graceful):
 
-		volumetimer = Timer( 1.0, sendvolume, args=( volume, ) )
+		volumetimer = Timer( 0.2, sendvolume, args=( volume, ) )
 		volumetimer.start()
 
 	else:
@@ -401,19 +401,21 @@ def handle_radiobutton1(pin):
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
-
 def triggerdisplay():
 	if muted:
 		timeout = mutedBacklightTimeout
 	else:
 		timeout = buttonBacklightTimeout
-
+	print("timeout ",timeout)
 	return not retriggerbacklight(dutycycle=100,timeout=timeout)
 
 def handle_stationincrement_button(pin):
 	global stationcounter,muted
 
-	setvol(vol, graceful=False)
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
 
 	if triggerdisplay():
 		return
@@ -422,16 +424,14 @@ def handle_stationincrement_button(pin):
 	updstationcounter(stationcounter)
 	playstation(stationcounter, graceful=True)
 
-	if muted:
-		muted = False
-		send_command("mute 0")
-		setvol(vol, graceful=False)
-
 
 def handle_stationdecrement_button(pin):
 	global stationcounter,muted
 
-	setvol(vol, graceful=False)
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
 
 	if triggerdisplay():
 		return
@@ -454,13 +454,13 @@ def savevol(vol):
 def handle_volumeincrement_button(pin):
 	global vol,muted
 
-	if triggerdisplay():
-		return
-
 	if muted:
 		muted = False
 		send_command("mute 0")
 		setvol(vol, graceful=False)
+		triggerdisplay()
+		return
+	elif triggerdisplay():
 		return
 
 	if vol < len(volumesteps)-1:
@@ -471,7 +471,13 @@ def handle_volumeincrement_button(pin):
 def handle_volumedecrement_button(pin):
 	global vol,muted
 
-	if triggerdisplay():
+	if muted:
+		muted = False
+		send_command("mute 0")
+		setvol(vol, graceful=False)
+		triggerdisplay()
+		return
+	elif triggerdisplay():
 		return
 
 	starttime = time.time()
@@ -485,7 +491,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = False
 			send_command("mute 0")
-			time.sleep(3)
+			triggerdisplay()
 			return
 
 		else:
@@ -498,7 +504,7 @@ def handle_volumedecrement_button(pin):
 			draw.text( ( 120, 120), "muted", font=font, fill="white", anchor="mm" )
 			# stwrite3("Press any button to unmute")
 			disp.display(img)
-			retriggerbacklight(dutycycle=100,timeout=mutedBacklightTimeout)
+			triggerdisplay()
 
 			# volimg = stationimg.copy()
 			# draw = ImageDraw.Draw(volimg)
@@ -522,12 +528,6 @@ def handle_volumedecrement_button(pin):
 				killer.shutdown = True
 
 			return
-
-	if muted:
-		muted = False
-		send_command("mute 0")
-		setvol(vol, graceful=False)
-		return
 
 	if vol > 0:
 		vol -= 1
