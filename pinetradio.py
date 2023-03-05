@@ -459,14 +459,24 @@ def showcurrentimg():
 	disp.display(volimg)
 
 def showtime():
-	global stationimg
+	global stationimg,showtimetimer
 
-	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
-	draw = ImageDraw.Draw(timeimg)
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-	draw.text( ( 120, 120), "{0}".format(now()), font=font, fill="white", anchor="mm" )
-	showvolume(draw,"red")
-	disp.display(timeimg)
+	try:
+		is_showtimeOn = not showtimetimer.finished.is_set()
+		showtimetimer.cancel()
+	except:
+		is_showtimeOn = True
+
+	# if not is_showtimeOn:
+	if True:
+		timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
+		draw = ImageDraw.Draw(timeimg)
+		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
+		draw.text( ( 120, 120), "{0}".format(now()), font=font, fill="white", anchor="mm" )
+
+		showvolume(draw,"red")
+		disp.display(timeimg)
+
 	showtimetimer = Timer( showtimetimeout, showcurrentimg, args=() )
 	showtimetimer.start()
 
