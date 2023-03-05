@@ -22,6 +22,7 @@ STATIONS = [
 
 graceperiod = 2.0 # seconds
 buttonBacklightTimeout = 60
+mutedBacklightTimeout = 5
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
@@ -402,10 +403,17 @@ def handle_radiobutton1(pin):
 
 
 def triggerdisplay():
-	return not retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout)
+	if muted:
+		timeout = mutedBacklightTimeout
+	else:
+		timeout = buttonBacklightTimeout
+
+	return not retriggerbacklight(dutycycle=100,timeout=timeout)
 
 def handle_stationincrement_button(pin):
-	global stationcounter
+	global stationcounter,muted
+
+	setvol(vol, graceful=False)
 
 	if triggerdisplay():
 		return
@@ -421,9 +429,9 @@ def handle_stationincrement_button(pin):
 
 
 def handle_stationdecrement_button(pin):
-	global stationcounter
+	global stationcounter,muted
 
-	showvolume()
+	setvol(vol, graceful=False)
 
 	if triggerdisplay():
 		return
@@ -484,11 +492,18 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
+			img = Image.new('RGB', (disp.width, disp.height), color="blue")
+			draw = ImageDraw.Draw(img)
+			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+			draw.text( ( 120, 120), "muted", font=font, fill="white", anchor="mm" )
+			# stwrite3("Press any button to unmute")
+			disp.display(img)
+			retriggerbacklight(dutycycle=100,timeout=mutedBacklightTimeout)
 
-			volimg = stationimg.copy()
-			draw = ImageDraw.Draw(volimg)
-			showvolume(draw, "blue")
-			disp.display(volimg)
+			# volimg = stationimg.copy()
+			# draw = ImageDraw.Draw(volimg)
+			# showvolume(draw, "blue")
+			# disp.display(volimg)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 3:
 				time.sleep(0.1)
