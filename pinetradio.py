@@ -25,6 +25,7 @@ buttonBacklightTimeout = 60
 mutedBacklightTimeout = 3
 icyBacklightTimeout = 10
 showtimetimeout = 4
+watchdogTimeout = 5
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
@@ -315,7 +316,7 @@ def stationplay(stationurl):
 		universal_newlines=True, bufsize=LINE_BUFFERED)
 
 def kill_processes():
-	global proc
+	global proc,watchdogtimer,backlighttimer,showtimetimer,volumetimer,playtimer
 
 	try:
 		'''Kills parent and children processess'''
@@ -328,6 +329,17 @@ def kill_processes():
 		pass
 
 	os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
+
+	try:
+		watchdogtimer.cancel()
+#		backlightimer.cancel()
+#		showtimetimer.cancel()
+#		volumetimer.cancel()
+#		playtimer.cancel()
+
+	except:
+		pass
+
 
 # "handle_button" will be called every time a button is pressed
 # It receives one argument: the associated input pin.
@@ -366,7 +378,7 @@ def setvol(vol, graceful, show=False):
 
 
 def playstation(stationcounter, graceful):
-    global play,draw,disp,img,stationimg
+    global playtimer,draw,disp,img,stationimg
 
     station = STATIONS[stationcounter]
 
@@ -382,15 +394,15 @@ def playstation(stationcounter, graceful):
     disp.display(img)
 
     try:
-        play.cancel()
+        playtimer.cancel()
 
     except NameError:
         pass
 
     if (graceful):
 
-        play = Timer( graceperiod, stationplay, args=( station[1], ) )
-        play.start()
+        playtimer = Timer( graceperiod, stationplay, args=( station[1], ) )
+        playtimer.start()
 
     else:
 
@@ -403,21 +415,18 @@ def updstationcounter(stationcounter):
 
 def handle_radiobutton(pin):
     global stationcounter
-    global play
     stationcounter = BUTTONS.index(pin)
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
 def handle_radiobutton0(pin):
     global stationcounter
-    global play
     stationcounter = 0
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
 
 def handle_radiobutton1(pin):
     global stationcounter
-    global play
     stationcounter = 1
     updstationcounter(stationcounter)
     playstation(stationcounter, graceful=True)
@@ -597,6 +606,21 @@ def setup_button_handlers(rotation):
 	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
 	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
+def restart():
+#	print("*** Restart ***")
+	playstation(stationcounter, graceful=False)
+
+def triggerwatchdog():
+	global watchdogtimer
+
+	try:
+		watchdogtimer.cancel()
+	except:
+		pass
+
+	if not killer.killed:
+		watchdogtimer = Timer( watchdogTimeout, restart, args=() )
+		watchdogtimer.start()
 
 if __name__ == '__main__':
 
@@ -611,6 +635,8 @@ if __name__ == '__main__':
 	while not killer.killed:
 
 		for stdoutline in proc.stdout:
+
+			triggerwatchdog()
 
 			if killer.killed:
 				break
