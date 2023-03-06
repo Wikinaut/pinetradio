@@ -57,8 +57,10 @@ global hostname
 hostname = os.uname()[1]
 
 def get_git_revision_short_hash() -> str:
-    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
-	cwd=os.path.dirname(os.path.realpath(__file__))).decode('ascii').strip()
+#    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
+	return subprocess.check_output(['git',
+	'log','-1', '--date=format:%Y%m%d-%H%M', '--format=%ad %h'],
+	cwd=os.path.dirname(os.path.realpath(__file__))).decode('ascii').strip().split()
 
 global githash
 githash = get_git_revision_short_hash()
@@ -481,8 +483,8 @@ def showtime():
 	if True:
 		timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 		draw = ImageDraw.Draw(timeimg)
-		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
-		draw.text( ( 120, 40), "{0}\n{1}".format(hostname,githash), font=font, fill="white", anchor="mm" )
+		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 25)
+		draw.text( ( 120, 50), "{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
 		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
 		draw.text( ( 120, 160), "{0}".format(now()), font=font, fill="white", anchor="mm" )
 
