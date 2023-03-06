@@ -57,7 +57,7 @@ global hostname
 hostname = os.uname()[1]
 
 def get_git_revision_short_hash() -> str:
-#    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
+	# return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
 	return subprocess.check_output(['git',
 	'log','-1', '--date=format:%Y%m%d-%H%M', '--format=%ad %h'],
 	cwd=os.path.dirname(os.path.realpath(__file__))).decode('ascii').strip().split()
@@ -338,13 +338,14 @@ def handle_button(pin):
 def sendvolume(volume):
 	send_command( 'volume {} 1'.format(volume))
 
-def setvol(vol, graceful):
+def setvol(vol, graceful, show=False):
 	global volumetimer,disp,img,stationimg,volimg
 
 	volimg = stationimg.copy()
 	draw = ImageDraw.Draw(volimg)
 	showvolume(draw)
-	# disp.display(volimg)
+	if show:
+		disp.display(volimg)
 
 	volume = volumesteps[vol]
 
@@ -434,7 +435,7 @@ def handle_stationincrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
-		setvol(vol, graceful=False)
+		setvol(vol, graceful=False, show=True)
 
 	if triggerdisplay():
 		return
@@ -450,7 +451,7 @@ def handle_stationdecrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
-		setvol(vol, graceful=False)
+		setvol(vol, graceful=False, show=True)
 
 	if triggerdisplay():
 		return
@@ -458,11 +459,6 @@ def handle_stationdecrement_button(pin):
 	stationcounter = (stationcounter-1) % len(STATIONS)
 	updstationcounter(stationcounter)
 	playstation(stationcounter, graceful=True)
-
-	if muted:
-		muted = False
-		send_command("mute 0")
-		setvol(vol, graceful=False)
 
 def showcurrentimg():
 	global volimg
@@ -492,8 +488,6 @@ def showtime():
 		showtimetimer = Timer( showtimetimeout, showcurrentimg, args=() )
 		showtimetimer.start()
 
-
-
 def savevol(vol):
 	f = open( volumecfgfile, "w")
 	f.write(str(vol))
@@ -505,7 +499,7 @@ def handle_volumeincrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
-		setvol(vol, graceful=False)
+		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		return
 	elif triggerdisplay():
@@ -524,7 +518,7 @@ def handle_volumedecrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
-		setvol(vol, graceful=False)
+		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		return
 	elif triggerdisplay():
