@@ -571,13 +571,8 @@ def handle_volumedecrement_button(pin):
 			if time.time()-starttime > 3:
 
 				cleardisplay()
-				img = Image.new('RGB', (disp.width, disp.height), color="red")
-				draw = ImageDraw.Draw(img)
-				font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
-				draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
-				disp.display(img)
+				triggerdisplay()
 
-				time.sleep(3)
 				killer.killed = True
 				killer.shutdown = True
 
@@ -687,4 +682,4 @@ if __name__ == '__main__':
 
 	if killer.shutdown:
 		print("Shutdown")
-		os.system("sudo shutdown -h now")
+		# os.system("sudo shutdown -h now")
