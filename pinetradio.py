@@ -682,4 +682,4 @@ if __name__ == '__main__':
 
 	if killer.shutdown:
 		print("Shutdown")
-		# os.system("sudo shutdown -h now")
+		os.system("sudo shutdown -h now")
