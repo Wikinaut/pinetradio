@@ -346,7 +346,7 @@ def setvol(vol, graceful):
 	volimg = stationimg.copy()
 	draw = ImageDraw.Draw(volimg)
 	showvolume(draw,"red")
-	# disp.display(volimg)
+	disp.display(volimg)
 
 	volume = volumesteps[vol]
 
