@@ -24,7 +24,7 @@ graceperiod = 1.0 # seconds between new station is actually selected
 buttonBacklightTimeout = 60
 mutedBacklightTimeout = 3
 icyBacklightTimeout = 10
-showtimetimeout = 2
+showtimetimeout = 4
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
@@ -141,9 +141,7 @@ disp = ST7789.ST7789(
 
 def now():
 	currentDateAndTime = datetime.now()
-
-	currentTime = currentDateAndTime.strftime("%H:%M:%S")
-	return currentTime
+	return currentDateAndTime.strftime("%H:%M:%S")
 
 def cleardisplay():
 	global img,draw,stationimg
@@ -151,11 +149,11 @@ def cleardisplay():
 	stationimg = img.copy()
 	draw = ImageDraw.Draw(img)
 
-def showvolume(draw,color):
+def showvolume(draw,volcolor="red",restcolor="yellow"):
 	total = len(volumesteps)-1
 	length = disp.height*(total-vol) // total
-	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill=color )
-	draw.line( (disp.width-1,length-1,disp.width-1,0), fill="yellow" )
+	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill=volcolor )
+	draw.line( (disp.width-1,length-1,disp.width-1,0), fill=restcolor )
 
 def setupdisplay():
 	global disp,img,draw,backlight
@@ -345,8 +343,8 @@ def setvol(vol, graceful):
 
 	volimg = stationimg.copy()
 	draw = ImageDraw.Draw(volimg)
-	showvolume(draw,"red")
-	disp.display(volimg)
+	showvolume(draw)
+	# disp.display(volimg)
 
 	volume = volumesteps[vol]
 
@@ -379,7 +377,7 @@ def playstation(stationcounter, graceful):
     cursor = stwrite( cursor, " {0}".format( station[0] ), font, "white" )
 
     stationimg = img.copy()
-    showvolume(draw,"red")
+    showvolume(draw)
     disp.display(img)
 
     try:
@@ -473,26 +471,28 @@ def showcurrentimg():
 def showtime():
 	global stationimg,showtimetimer
 
+	is_showtimeOn = False
+
 	try:
 		is_showtimeOn = not showtimetimer.finished.is_set()
-		showtimetimer.cancel()
 	except:
-		is_showtimeOn = True
+		is_showtimeOn = False
 
-	# if not is_showtimeOn:
-	if True:
-		timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
-		draw = ImageDraw.Draw(timeimg)
-		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 25)
-		draw.text( ( 120, 50), "{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
-		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-		draw.text( ( 120, 160), "{0}".format(now()), font=font, fill="white", anchor="mm" )
 
-		showvolume(draw,"red")
-		disp.display(timeimg)
+	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
+	draw = ImageDraw.Draw(timeimg)
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 25)
+	draw.text( ( 120, 50 ), "{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
+	draw.text( ( 120, 160 ), "{0}".format(now()), font=font, fill="white", anchor="mm" )
+	showvolume(draw,"white","black")
+	disp.display(timeimg)
 
-	showtimetimer = Timer( showtimetimeout, showcurrentimg, args=() )
-	showtimetimer.start()
+	if not is_showtimeOn:
+		showtimetimer = Timer( showtimetimeout, showcurrentimg, args=() )
+		showtimetimer.start()
+
+
 
 def savevol(vol):
 	f = open( volumecfgfile, "w")
