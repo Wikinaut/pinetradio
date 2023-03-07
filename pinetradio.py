@@ -23,8 +23,9 @@ STATIONS = [
 graceperiod = 1.0 # seconds between new station is actually selected
 buttonBacklightTimeout = 30
 mutedBacklightTimeout = 3
-icyBacklightTimeout = 5
-showtimetimeout = 4
+icyBacklightTimeout = 10
+showtimeTimeout = 4
+short_showtimeTimeout = 1
 watchdogTimeout = 5
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
@@ -185,7 +186,7 @@ def setbacklight(dutycycle):
 	global backlight
 	backlight.ChangeDutyCycle(dutycycle)
 
-def retriggerbacklight(dutycycle,timeout):
+def retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 	# returns True if backlight was on
 
 	global backlighttimer
@@ -477,8 +478,11 @@ def handle_stationdecrement_button(pin):
 	playstation(stationcounter, graceful=True)
 
 def showcurrentimg():
-	global volimg
-	disp.display(volimg)
+	global volimg,stationimg
+	try:
+		disp.display(volimg)
+	except:
+		disp.display(stationimg)
 
 def showtime():
 	global stationimg,showtimetimer
@@ -489,7 +493,6 @@ def showtime():
 		is_showtimeOn = not showtimetimer.finished.is_set()
 	except:
 		is_showtimeOn = False
-
 
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
@@ -502,8 +505,10 @@ def showtime():
 	showvolume(draw,"white","black")
 	disp.display(timeimg)
 
+	retriggerbacklight(timeout=short_showtimeTimeout)
+
 	if not is_showtimeOn:
-		showtimetimer = Timer( showtimetimeout, showcurrentimg, args=() )
+		showtimetimer = Timer( showtimeTimeout, showcurrentimg, args=() )
 		showtimetimer.start()
 
 def savevol(vol):
@@ -644,11 +649,17 @@ if __name__ == '__main__':
 	kill_processes()
 	playstation(stationcounter, graceful=False)
 
+	starttime = time.time()
+
 	while not killer.killed:
 
 		for stdoutline in proc.stdout:
 
 			triggerwatchdog()
+
+			it = int( time.time() % 15 )
+			if it == 0:
+				showtime()
 
 			if killer.killed:
 				break
