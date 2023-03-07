@@ -317,6 +317,8 @@ def stationplay(stationurl,forcemute=False):
 
 	if forcemute:
 		send_command("mute 1")
+		send_command("stop")
+
 
 def kill_processes():
 	global proc,watchdogtimer,backlighttimer,showtimetimer,volumetimer,playtimer
@@ -447,6 +449,7 @@ def handle_stationincrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
+		send_command("play")
 		setvol(vol, graceful=False, show=True)
 
 	if triggerdisplay():
@@ -463,6 +466,7 @@ def handle_stationdecrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
+		send_command("play")
 		setvol(vol, graceful=False, show=True)
 
 	if triggerdisplay():
@@ -513,6 +517,7 @@ def handle_volumeincrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
+		send_command("play")
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		return
@@ -533,6 +538,7 @@ def handle_volumedecrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
+		send_command("play")
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		return
@@ -552,6 +558,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = False
 			send_command("mute 0")
+			send_command("play")
 			triggerdisplay()
 			return
 
@@ -559,6 +566,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
+			send_command("stop")
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
