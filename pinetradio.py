@@ -27,6 +27,7 @@ icyBacklightTimeout = 10
 showtimeTimeout = 4
 short_showtimeTimeout = 1
 watchdogTimeout = 5
+showtime_every_n_seconds = 60
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
@@ -318,7 +319,7 @@ def stationplay(stationurl,forcemute=False):
 
 	if forcemute:
 		send_command("mute 1")
-		send_command("stop")
+		# send_command("stop")
 
 
 def kill_processes():
@@ -571,7 +572,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
-			send_command("stop")
+			# send_command("stop")
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
@@ -657,7 +658,7 @@ if __name__ == '__main__':
 
 			triggerwatchdog()
 
-			it = int( time.time() % 15 )
+			it = int( time.time() % showtime_every_n_seconds )
 			if it == 0:
 				showtime()
 
