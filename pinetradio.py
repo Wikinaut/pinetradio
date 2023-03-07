@@ -21,9 +21,9 @@ STATIONS = [
 ]
 
 graceperiod = 1.0 # seconds between new station is actually selected
-buttonBacklightTimeout = 60
+buttonBacklightTimeout = 30
 mutedBacklightTimeout = 3
-icyBacklightTimeout = 10
+icyBacklightTimeout = 5
 showtimetimeout = 4
 watchdogTimeout = 5
 
@@ -297,7 +297,7 @@ def send_command(command):
 	except:
 		pass
 
-def stationplay(stationurl):
+def stationplay(stationurl,forcemute=False):
 	global proc
 
 	LINE_BUFFERED = 1
@@ -314,6 +314,9 @@ def stationplay(stationurl):
 		stdout=subprocess.PIPE,
 		stderr=subprocess.DEVNULL,
 		universal_newlines=True, bufsize=LINE_BUFFERED)
+
+	if forcemute:
+		send_command("mute 1")
 
 def kill_processes():
 	global proc,watchdogtimer,backlighttimer,showtimetimer,volumetimer,playtimer
@@ -377,7 +380,7 @@ def setvol(vol, graceful, show=False):
 		sendvolume( volume )
 
 
-def playstation(stationcounter, graceful):
+def playstation(stationcounter, graceful, forcemute=False):
     global playtimer,draw,disp,img,stationimg
 
     station = STATIONS[stationcounter]
@@ -401,12 +404,12 @@ def playstation(stationcounter, graceful):
 
     if (graceful):
 
-        playtimer = Timer( graceperiod, stationplay, args=( station[1], ) )
+        playtimer = Timer( graceperiod, stationplay, args=( station[1], forcemute) )
         playtimer.start()
 
     else:
 
-        stationplay( station[1] )
+        stationplay( station[1], forcemute )
 
 def updstationcounter(stationcounter):
     f = open( stationcfgfile, "w")
@@ -486,10 +489,12 @@ def showtime():
 
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 25)
-	draw.text( ( 120, 50 ), "{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-	draw.text( ( 120, 160 ), "{0}".format(now()), font=font, fill="white", anchor="mm" )
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
+	draw.text( ( 120, 50 ),
+		"{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+	draw.text( ( 120, 160 ),
+		"{0}".format(now()), font=font, fill="white", anchor="mm" )
 	showvolume(draw,"white","black")
 	disp.display(timeimg)
 
@@ -514,12 +519,12 @@ def handle_volumeincrement_button(pin):
 	elif triggerdisplay():
 		return
 
-	showtime()
-
 	if vol < len(volumesteps)-1:
 		vol += 1
 		savevol(vol)
 		setvol(vol, graceful=False)
+
+	showtime()
 
 
 def handle_volumedecrement_button(pin):
@@ -586,6 +591,8 @@ def handle_volumedecrement_button(pin):
 		savevol(vol)
 		setvol(vol, graceful=False)
 
+	showtime()	# after volume may be changed
+
 
 def setup_button_handlers(rotation):
 	# Loop through out buttons and attach the "handle_button" function to each
@@ -604,7 +611,8 @@ def setup_button_handlers(rotation):
 
 def restart():
 #	print("*** Restart ***")
-	playstation(stationcounter, graceful=False)
+
+	playstation(stationcounter, graceful=False, forcemute=muted)
 
 def triggerwatchdog():
 	global watchdogtimer
