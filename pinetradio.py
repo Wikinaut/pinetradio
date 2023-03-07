@@ -514,12 +514,13 @@ def handle_volumeincrement_button(pin):
 	elif triggerdisplay():
 		return
 
+	showtime()
+
 	if vol < len(volumesteps)-1:
 		vol += 1
 		savevol(vol)
 		setvol(vol, graceful=False)
 
-	showtime()
 
 def handle_volumedecrement_button(pin):
 	global vol,muted
@@ -532,6 +533,8 @@ def handle_volumedecrement_button(pin):
 		return
 	elif triggerdisplay():
 		return
+
+	showtime()
 
 	starttime = time.time()
 
@@ -582,8 +585,6 @@ def handle_volumedecrement_button(pin):
 		vol -= 1
 		savevol(vol)
 		setvol(vol, graceful=False)
-
-	showtime()
 
 
 def setup_button_handlers(rotation):
