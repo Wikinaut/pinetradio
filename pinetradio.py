@@ -310,8 +310,6 @@ def stationplay(stationurl):
 
 	LINE_BUFFERED = 1
 
-	print("stationplay ",stationurl)
-
 	try:
 		stationselecttimer.cancel()
 	except:
@@ -594,8 +592,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
-			send_command("stop") # Test
-			print("stop on mute (sent)")
+			send_command("stop")
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
@@ -603,12 +600,6 @@ def handle_volumedecrement_button(pin):
 			draw.text( ( 120, 120), "muted\n\n{0}".format(now()), font=font, fill="white", anchor="mm" )
 			disp.display(img)
 			triggerdisplay()
-
-
-			# volimg = stationimg.copy()
-			# draw = ImageDraw.Draw(volimg)
-			# showvolume(draw, "blue")
-			# disp.display(volimg)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 3:
 				time.sleep(0.1)
@@ -620,6 +611,8 @@ def handle_volumedecrement_button(pin):
 
 				killer.killed = True
 				killer.shutdown = True
+
+				shutdown()
 
 			return
 
@@ -670,11 +663,49 @@ def setup_button_handlers():
 def restart():
 
 	# TODO log this
-	print("On restart: muted ",muted)
 
 	if not muted:
-		print("*** Restart ***")
 		playstation(stationcounter, graceful=False)
+
+
+def shutdown():
+
+	print("End of the program. I was killed gracefully :)")
+
+	setbacklight(100)
+
+	img = Image.new('RGB', (disp.width, disp.height), color="red")
+	draw = ImageDraw.Draw(img)
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
+	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
+	disp.display(img)
+
+	kill_processes()
+	time.sleep(1)
+
+	def big(text):
+
+		img = Image.new('RGB', (disp.width, disp.height), color="black")
+		draw = ImageDraw.Draw(img)
+		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 270)
+		draw.text( ( 120, 120), text, font=font, fill="white", anchor="mm" )
+		disp.display(img)
+		time.sleep(0.2)
+
+	big("3")
+	big("2")
+	big("1")
+	big("0")
+	setbacklight(0)
+	backlight.stop()
+	cleardisplay()
+	disp.display(img)
+
+	if killer.shutdown:
+		print("Shutdown")
+		os.system("sudo shutdown -h now")
+
+	sys.exit()
 
 def triggerwatchdog():
 	global watchdogtimer
@@ -731,37 +762,6 @@ if __name__ == '__main__':
 					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 					last_icyinfo = icyinfo
 
-	print("End of the program. I was killed gracefully :)")
+	# shutdown()
+	print("Ende.")
 
-	setbacklight(100)
-
-	img = Image.new('RGB', (disp.width, disp.height), color="red")
-	draw = ImageDraw.Draw(img)
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
-	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
-	disp.display(img)
-
-	kill_processes()
-	time.sleep(1)
-
-	def big(text):
-
-		img = Image.new('RGB', (disp.width, disp.height), color="black")
-		draw = ImageDraw.Draw(img)
-		font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 270)
-		draw.text( ( 120, 120), text, font=font, fill="white", anchor="mm" )
-		disp.display(img)
-		time.sleep(0.2)
-
-	big("3")
-	big("2")
-	big("1")
-	big("0")
-	setbacklight(0)
-	backlight.stop()
-	cleardisplay()
-	disp.display(img)
-
-	if killer.shutdown:
-		print("Shutdown")
-		os.system("sudo shutdown -h now")
