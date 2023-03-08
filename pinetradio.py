@@ -20,13 +20,13 @@ STATIONS = [
 	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
 ]
 
-graceperiod = 1.0 # seconds between new station is actually selected
+graceperiod = 2.0 # seconds between new station is actually selected
 buttonBacklightTimeout = 30
 mutedBacklightTimeout = 3
 icyBacklightTimeout = 10
 showtimeTimeout = 4
 short_showtimeTimeout = 1
-watchdogTimeout = 5
+watchdogTimeout = 15 # Test
 showtime_every_n_seconds = 60
 
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
@@ -299,11 +299,17 @@ def send_command(command):
 	except:
 		pass
 
-def stationplay(stationurl,forcemute=False):
+def stationplay(stationurl):
 	global proc
 
 	LINE_BUFFERED = 1
-	volume = volumesteps[vol]
+
+	print("stationplay ",stationurl)
+
+	try:
+		stationselecttimer.cancel()
+	except:
+		pass
 
 	try:
 		kill_processes()
@@ -311,19 +317,29 @@ def stationplay(stationurl,forcemute=False):
 	except NameError:
 		pass
 
-	proc = subprocess.Popen('/usr/bin/mplayer -slave -idle -allow-dangerous-playlist-parsing -volume {0} 1 {1}'.format(vol,stationurl).split(),
+	if muted:
+		startvolume = 0
+	else:
+		startvolume = volumesteps[vol]
+
+	proc = subprocess.Popen('/usr/bin/mplayer -slave -idle -allow-dangerous-playlist-parsing -volume {0} 1 {1}'
+		.format(startvolume,stationurl).split(),
 		stdin=subprocess.PIPE,
 		stdout=subprocess.PIPE,
 		stderr=subprocess.DEVNULL,
 		universal_newlines=True, bufsize=LINE_BUFFERED)
 
-	if forcemute:
+	time.sleep(10) # wait for mplayer start up
+
+	if muted:
 		send_command("mute 1")
-		# send_command("stop")
+	else:
+		send_command("mute 0")
+		sendvolume(startvolume)
 
 
 def kill_processes():
-	global proc,watchdogtimer,backlighttimer,showtimetimer,volumetimer,playtimer
+	global proc,watchdogtimer,backlighttimer,showtimetimer,volumetimer,stationselecttimer
 
 	try:
 		'''Kills parent and children processess'''
@@ -342,7 +358,7 @@ def kill_processes():
 #		backlightimer.cancel()
 #		showtimetimer.cancel()
 #		volumetimer.cancel()
-#		playtimer.cancel()
+#		stationselecttimer.cancel()
 
 	except:
 		pass
@@ -384,8 +400,8 @@ def setvol(vol, graceful, show=False):
 		sendvolume( volume )
 
 
-def playstation(stationcounter, graceful, forcemute=False):
-    global playtimer,draw,disp,img,stationimg
+def playstation(stationcounter, graceful):
+    global stationselecttimer,draw,disp,img,stationimg
 
     station = STATIONS[stationcounter]
 
@@ -401,19 +417,19 @@ def playstation(stationcounter, graceful, forcemute=False):
     disp.display(img)
 
     try:
-        playtimer.cancel()
+        stationselecttimer.cancel()
 
     except NameError:
         pass
 
     if (graceful):
 
-        playtimer = Timer( graceperiod, stationplay, args=( station[1], forcemute) )
-        playtimer.start()
+        stationselecttimer = Timer( graceperiod, stationplay, args=( station[1], ) )
+        stationselecttimer.start()
 
     else:
 
-        stationplay( station[1], forcemute )
+        stationplay( station[1] )
 
 def updstationcounter(stationcounter):
     f = open( stationcfgfile, "w")
@@ -564,7 +580,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = False
 			send_command("mute 0")
-			send_command("play")
+			# send_command("play")
 			triggerdisplay()
 			return
 
@@ -572,7 +588,8 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
-			# send_command("stop")
+			send_command("stop") # Test
+			print("stop on mute (sent)")
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
@@ -624,9 +641,13 @@ def setup_button_handlers(rotation):
 	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
 def restart():
-#	print("*** Restart ***")
 
-	playstation(stationcounter, graceful=False, forcemute=muted)
+	# TODO log this
+	print("On restart: muted ",muted)
+
+	if not muted:
+		print("*** Restart ***")
+		playstation(stationcounter, graceful=False)
 
 def triggerwatchdog():
 	global watchdogtimer
