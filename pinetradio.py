@@ -35,6 +35,12 @@ startvolstep = 4
 muted = False
 last_icyinfo = ""
 
+# Test speakers
+# aplay -L
+# speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s1
+# speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s2
+
+
 import signal
 from threading import Timer
 import RPi.GPIO as GPIO
@@ -625,7 +631,7 @@ def handle_volumedecrement_button(pin):
 	showtime()	# after volume may be changed
 
 
-def setup_button_handlers(rotation):
+def setup_button_handlers():
 	# Loop through out buttons and attach the "handle_button" function to each
 	# We're watching the "FALLING" edge (transition from 3.3V to Ground) and
 	# picking a generous bouncetime of 100ms to smooth out button presses.
@@ -633,11 +639,32 @@ def setup_button_handlers(rotation):
 	# for pin in BUTTONS:
 	#    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
 
-	# rotation == 270
+	try:
+		GPIO.remove_event( PIN['Y'] )
+	except:
+		pass
 
 	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
+
+	try:
+		GPIO.remove_event( PIN['X'] )
+	except:
+		pass
+
 	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
+
+	try:
+		GPIO.remove_event( PIN['B'] )
+	except:
+		pass
+
 	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
+
+	try:
+		GPIO.remove_event( PIN['A'] )
+	except:
+		pass
+
 	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
 def restart():
@@ -664,7 +691,7 @@ def triggerwatchdog():
 if __name__ == '__main__':
 
 	setupdisplay()
-	setup_button_handlers(rotation)
+	setup_button_handlers()
 
 	killer = GracefulKiller()
 
@@ -685,6 +712,11 @@ if __name__ == '__main__':
 
 			if killer.killed:
 				break
+
+			try:
+				setup_button_handlers()
+			except:
+				pass
 
 			if stdoutline.startswith('ICY Info:'):
 
