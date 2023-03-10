@@ -555,7 +555,7 @@ def handle_volumeincrement_button(pin):
 		savevol(vol)
 		setvol(vol, graceful=False)
 
-	showtime()
+	# showtime()
 
 
 def handle_volumedecrement_button(pin):
@@ -570,8 +570,6 @@ def handle_volumedecrement_button(pin):
 		return
 	elif triggerdisplay():
 		return
-
-	showtime()
 
 	starttime = time.time()
 
@@ -592,7 +590,7 @@ def handle_volumedecrement_button(pin):
 
 			muted = True
 			send_command("mute 1")
-			send_command("stop")
+			# send_command("stop")
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
@@ -621,7 +619,7 @@ def handle_volumedecrement_button(pin):
 		savevol(vol)
 		setvol(vol, graceful=False)
 
-	showtime()	# after volume may be changed
+	# showtime()	# after volume may be changed
 
 
 def setup_button_handlers():
