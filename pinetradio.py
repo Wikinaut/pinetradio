@@ -543,7 +543,7 @@ def handle_volumeincrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
-		send_command("play")
+		# send_command("play")
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		return
@@ -553,7 +553,7 @@ def handle_volumeincrement_button(pin):
 	if vol < len(volumesteps)-1:
 		vol += 1
 		savevol(vol)
-		setvol(vol, graceful=False)
+		setvol(vol, graceful=False, show=True)
 
 	# showtime()
 
@@ -564,7 +564,7 @@ def handle_volumedecrement_button(pin):
 	if muted:
 		muted = False
 		send_command("mute 0")
-		send_command("play")
+		# send_command("play")
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		return
@@ -610,14 +610,14 @@ def handle_volumedecrement_button(pin):
 				killer.killed = True
 				killer.shutdown = True
 
-				shutdown()
+				# shutdown()
 
 			return
 
 	if vol > 0:
 		vol -= 1
 		savevol(vol)
-		setvol(vol, graceful=False)
+		setvol(vol, graceful=False, show=True)
 
 	# showtime()	# after volume may be changed
 
@@ -760,6 +760,5 @@ if __name__ == '__main__':
 					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 					last_icyinfo = icyinfo
 
-	# shutdown()
+	shutdown()
 	print("Ende.")
-
