@@ -1,0 +1,35 @@
+ctl.equal {
+  type equal;
+}
+
+pcm.plugequal {
+  type equal;
+  slave {
+    pcm "plughw:CARD=sndrpihifiberry,DEV=0";
+  }
+}
+
+pcm.plugmixequal {
+  type equal;
+  slave {
+	pcm plug:dmix;
+  }
+}
+
+pcm.!default {
+ type plug;
+ slave {
+   pcm plugequal;
+ }
+}
+
+# Shared access to our audio card
+pcm.dmixer {
+	type dmix
+	ipc_key 1234
+	ipc_key_add_uid true
+	ipc_perm 0666
+	slave {
+		pcm "hw:CARD=sndrpihifiberry,DEV=0";
+	}
+}

@@ -40,6 +40,20 @@ last_icyinfo = ""
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s1
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s2
 
+# sudo apt install mpv sox libsox-fmt-mp3 libasound2-plugin-equal
+# apt remove pulseaudio vlc chromium-browser
+
+# edit ~/.asoundrc
+
+# alsactl kill rescan
+# alsamixer -D equal
+
+# Test
+# mpv --audio-device=alsa/plugmixequal http://www.radioeins.de/livemp3 --volume=50 --cache=no
+
+# ps -ef | grep dm
+# sudo systemctl stop lightdm
+# sudo systemctl disable lightdm
 
 import signal
 from threading import Timer
