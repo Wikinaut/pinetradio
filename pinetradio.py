@@ -29,6 +29,11 @@ short_showtimeTimeout = 1
 watchdogTimeout = 15 # Test
 showtime_every_n_seconds = 60
 
+# after mute:
+# whether volume buttons immediately control volume
+# or first press only restart backliight display
+volumebutton_after_mute_direct = True
+
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 startvolstep = 4
@@ -562,7 +567,8 @@ def handle_volumeincrement_button(pin):
 		triggerdisplay()
 		return
 	elif triggerdisplay():
-		return
+		if not volumebutton_after_mute_direct:
+			return
 
 	if vol < len(volumesteps)-1:
 		vol += 1
@@ -598,7 +604,8 @@ def handle_volumedecrement_button(pin):
 			send_command("mute 0")
 			# send_command("play")
 			triggerdisplay()
-			return
+			if not volumebutton_after_mute_direct:
+				return
 
 		else:
 
