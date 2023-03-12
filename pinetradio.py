@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-# pinetradio
-# tiny internet radio with Raspberry Zero WH and Pirate-Audi HAT
+# pinetradio tiny internet radio with Raspberry Zero WH and Pirate-Audi HAT
 #
 # init 20230218
 
@@ -189,7 +188,7 @@ def showvolume(draw,volcolor="red",restcolor="yellow"):
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill=restcolor )
 
 def setupdisplay():
-	global disp,img,draw,backlight
+	global disp,img,draw,backlight,display
 
 	# Initialize display.
 	# disp.begin()
@@ -201,6 +200,7 @@ def setupdisplay():
 
 	# Set up our pin as a PWM output at 500Hz
 	backlight = GPIO.PWM(13, 100)
+	display = 100
 
 	# Start the PWM at 100% duty cycle
 	# backlight.start(100)
@@ -214,13 +214,18 @@ def setupdisplay():
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
 def setbacklight(dutycycle):
-	global backlight
+	global backlight,display
+	display=dutycycle
 	backlight.ChangeDutyCycle(dutycycle)
+
+def display_is_on():
+	global display
+	return display > 0
 
 def retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 	# returns True if backlight was on
 
-	global backlighttimer
+	global backlighttimer,display
 
 	try:
 		is_backlightOn = not backlighttimer.finished.is_set()
@@ -230,6 +235,7 @@ def retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 		is_backlightOn = True
 
 	backlight.start(dutycycle)
+	display = dutycycle
 	backlighttimer = Timer( timeout, setbacklight, args=( 0, ) )
 	backlighttimer.start()
 
@@ -330,7 +336,9 @@ def send_command(command):
 		pass
 
 def stationplay(stationurl):
-	global proc
+	global proc,icy_info
+
+	icyinfo = ""
 
 	LINE_BUFFERED = 1
 
@@ -637,16 +645,16 @@ def handle_volumedecrement_button(pin):
 	if volumedecrementbuttonblock:
 		return
 
+	display_was_on = display_is_on()
+
 	if muted:
 		muted = False
 		send_command("mute 0")
 		# send_command("play")
 		setvol(vol, graceful=False, show=True)
-		display_was_off = triggerdisplay()
+		triggerdisplay()
 		if not volumebutton_after_mute_direct:
 			return
-	else:
-		display_was_off = triggerdisplay()
 
 	starttime = time.time()
 
@@ -674,8 +682,15 @@ def handle_volumedecrement_button(pin):
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
-			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-			draw.text( ( 120, 120), "muted\n\n{0}".format(now()), font=font, fill="white", anchor="mm" )
+
+			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+			draw.text( ( 120, 80),
+				"muted", font=font, fill="white", anchor="mm" )
+
+			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+			draw.text( ( 120, 160 ),
+				"{0}".format(now()), font=font, fill="white", anchor="mm" )
+
 			disp.display(img)
 			triggerdisplay(timeout=7)
 
@@ -697,13 +712,13 @@ def handle_volumedecrement_button(pin):
 				showtime(timeout=2,force=True)
 				return
 
-	if display_was_off:
-		return
+	else:
+		triggerdisplay()
 
-	if vol > 0:
-		vol -= 1
-		savevol(vol)
-		setvol(vol, graceful=False, show=True)
+		if vol > 0:
+			vol -= 1
+			savevol(vol)
+			setvol(vol, graceful=False, show=True)
 
 	# showtime()	# after volume may be changed
 
