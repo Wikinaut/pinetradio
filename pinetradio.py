@@ -34,6 +34,9 @@ showtime_every_n_seconds = 60
 # or first press only restart backliight display
 volumebutton_after_mute_direct = True
 
+global anybuttonpressed
+anybuttonpressed = False
+
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 startvolstep = 4
@@ -80,6 +83,8 @@ stationcfgfile = "/home/pi/pinetradio.station.cfg"
 volumecfgfile = "/home/pi/pinetradio.volume.cfg"
 
 global stationcounter
+global volumedecrementbuttonblock
+volumedecrementbuttonblock = False
 
 global hostname
 hostname = os.uname()[1]
@@ -487,6 +492,8 @@ def triggerdisplay():
 def handle_stationincrement_button(pin):
 	global stationcounter,muted
 
+	buttonpressed(pin)
+
 	if muted:
 		muted = False
 		send_command("mute 0")
@@ -503,6 +510,8 @@ def handle_stationincrement_button(pin):
 
 def handle_stationdecrement_button(pin):
 	global stationcounter,muted
+
+	buttonpressed(pin)
 
 	if muted:
 		muted = False
@@ -526,6 +535,11 @@ def showcurrentimg():
 
 def showtime():
 	global stationimg,showtimetimer
+
+	# suppress time display when a button was pressed recently
+
+	if anybuttonpressed:
+		return
 
 	is_showtimeOn = False
 
@@ -556,8 +570,23 @@ def savevol(vol):
 	f.write(str(vol))
 	f.close()
 
+def bptimerhandler(pin):
+	global anybuttonpressed
+	anybuttonpressed = False
+	# print("buttontimer ends pin",pin)
+
+def buttonpressed(pin):
+	global anybuttonpressed
+	anybuttonpressed = True
+	# print("buttontimer starts pin",pin)
+
+	bptimer = Timer( 5, bptimerhandler, args = (pin, ) )
+	bptimer.start()
+
 def handle_volumeincrement_button(pin):
 	global vol,muted
+
+	buttonpressed(pin)
 
 	if muted:
 		muted = False
@@ -565,10 +594,10 @@ def handle_volumeincrement_button(pin):
 		# send_command("play")
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
-		return
-	elif triggerdisplay():
 		if not volumebutton_after_mute_direct:
 			return
+	else:
+		triggerdisplay()
 
 	if vol < len(volumesteps)-1:
 		vol += 1
@@ -578,8 +607,27 @@ def handle_volumeincrement_button(pin):
 	# showtime()
 
 
+def gracetimer():
+	global volumedecrementbuttonblock
+	volumedecrementbuttonblock = False
+
+def blockvolumedecrementbutton():
+	global volumedecrementbuttonblock
+
+	volumedecrementbuttonblock = True
+	try:
+		grace.cancel()
+	except:
+		grace = Timer( 2, gracetimer, args = () )
+		grace.start()
+
 def handle_volumedecrement_button(pin):
-	global vol,muted
+	global vol,muted,grace,volumedecrementbuttonblock
+
+	buttonpressed(pin)
+
+	if volumedecrementbuttonblock:
+		return
 
 	if muted:
 		muted = False
@@ -587,16 +635,17 @@ def handle_volumedecrement_button(pin):
 		# send_command("play")
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
-		return
-	elif triggerdisplay():
-		return
+		if not volumebutton_after_mute_direct:
+			return
+	else:
+		triggerdisplay()
 
 	starttime = time.time()
 
-	while GPIO.input(pin) == 0 and time.time()-starttime < 0.8:
-		time.sleep(0.1)
+	while GPIO.input(pin) == 0 and time.time()-starttime < 1:
+		time.sleep(0.2)
 
-	if time.time()-starttime >= 0.8:
+	if time.time()-starttime >= 1:
 
 		if muted:
 
@@ -609,6 +658,8 @@ def handle_volumedecrement_button(pin):
 
 		else:
 
+			blockvolumedecrementbutton()
+
 			muted = True
 			send_command("mute 1")
 			# send_command("stop")
@@ -620,10 +671,10 @@ def handle_volumedecrement_button(pin):
 			disp.display(img)
 			triggerdisplay()
 
-			while GPIO.input(pin) == 0 and time.time()-starttime < 3:
+			while GPIO.input(pin) == 0 and time.time()-starttime < 4:
 				time.sleep(0.1)
 
-			if time.time()-starttime > 3:
+			if time.time()-starttime > 4:
 
 				cleardisplay()
 				triggerdisplay()
