@@ -535,12 +535,12 @@ def showcurrentimg():
 	except:
 		disp.display(stationimg)
 
-def showtime(timeout=short_showtimeTimeout):
+def showtime(timeout=short_showtimeTimeout,force=False):
 	global stationimg,showtimetimer
 
 	# suppress time display when a button was pressed recently
 
-	if anybuttonpressed:
+	if anybuttonpressed and not force:
 		return
 
 	is_showtimeOn = False
@@ -549,6 +549,12 @@ def showtime(timeout=short_showtimeTimeout):
 		is_showtimeOn = not showtimetimer.finished.is_set()
 	except:
 		is_showtimeOn = False
+
+	if is_showtimeOn:
+		try:
+			showtimetime.cancel()
+		except:
+			pass
 
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
@@ -563,8 +569,8 @@ def showtime(timeout=short_showtimeTimeout):
 
 	retriggerbacklight(timeout=timeout)
 
-	if not is_showtimeOn:
-		showtimetimer = Timer( showtimeTimeout, showcurrentimg, args=() )
+	if not is_showtimeOn or force:
+		showtimetimer = Timer( timeout, showcurrentimg, args=() )
 		showtimetimer.start()
 
 def savevol(vol):
@@ -582,7 +588,7 @@ def buttonpressed(pin):
 	anybuttonpressed = True
 	# print("buttontimer starts pin",pin)
 
-	bptimer = Timer( 5, bptimerhandler, args = (pin, ) )
+	bptimer = Timer( 20, bptimerhandler, args = (pin, ) )
 	bptimer.start()
 
 def handle_volumeincrement_button(pin):
@@ -636,11 +642,11 @@ def handle_volumedecrement_button(pin):
 		send_command("mute 0")
 		# send_command("play")
 		setvol(vol, graceful=False, show=True)
-		triggerdisplay()
+		display_was_off = triggerdisplay()
 		if not volumebutton_after_mute_direct:
 			return
-	elif triggerdisplay():
-		return
+	else:
+		display_was_off = triggerdisplay()
 
 	starttime = time.time()
 
@@ -671,10 +677,10 @@ def handle_volumedecrement_button(pin):
 			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
 			draw.text( ( 120, 120), "muted\n\n{0}".format(now()), font=font, fill="white", anchor="mm" )
 			disp.display(img)
-			triggerdisplay(timeout=12)
+			triggerdisplay(timeout=7)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 4:
-				time.sleep(0.1)
+				time.sleep(0.2)
 
 			if time.time()-starttime > 4:
 
@@ -688,10 +694,11 @@ def handle_volumedecrement_button(pin):
 
 			else:
 				time.sleep(5-time.time()+starttime)
-				triggerdisplay()
-				showtime(6)
+				showtime(timeout=2,force=True)
 				return
 
+	if display_was_off:
+		return
 
 	if vol > 0:
 		vol -= 1
