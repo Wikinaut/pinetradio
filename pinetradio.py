@@ -24,7 +24,7 @@ buttonBacklightTimeout = 10
 mutedBacklightTimeout = 3
 icyBacklightTimeout = 10
 showtimeTimeout = 4
-short_showtimeTimeout = 1
+short_showtimeTimeout = 1.5
 watchdogTimeout = 15 # Test
 showtime_every_n_seconds = 60
 
@@ -578,7 +578,7 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 	retriggerbacklight(timeout=timeout)
 
 	if not is_showtimeOn or force:
-		showtimetimer = Timer( timeout, showcurrentimg, args=() )
+		showtimetimer = Timer( timeout+0.5, showcurrentimg, args=() )
 		showtimetimer.start()
 
 def savevol(vol):
