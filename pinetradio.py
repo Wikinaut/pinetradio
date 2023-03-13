@@ -578,7 +578,7 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 	retriggerbacklight(timeout=timeout)
 
 	if not is_showtimeOn or force:
-		showtimetimer = Timer( timeout+0.5, showcurrentimg, args=() )
+		showtimetimer = Timer( timeout+1.0, showcurrentimg, args=() )
 		showtimetimer.start()
 
 def savevol(vol):
