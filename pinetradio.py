@@ -256,8 +256,6 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 		line_length_in_pixels: int):
 	lines = ['']
 
-	# print(text)
-
 	text2=['']
 	for word in re.split(r"([ /-])", text):
 		if len(word) > 14:
@@ -272,9 +270,6 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 			text2.append(word.strip())
 
 	text3 = " ".join(text2)
-
-	print(text," => ")
-	print(text3)
 
 #	split and keep the separators:
 #	for word in re.split(r"([ /-])", text3):
@@ -308,16 +303,20 @@ def testsize( box, font_size, text):
 
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
 	wrappedtext = get_wrapped_text( text, font, disp.width )
+
 	size = font.getsize_multiline(wrappedtext)
 
 	if ( (size is None)
-		or ( size[0] >= box[2] - box[0] )
-		or ( size[1] >= box[3] - box[1] ) ):
+		or ( size[0] > box[2] - box[0] )
+		or ( size[1] > box[3] - box[1] ) ):
 		return None
 	else:
 		return size
 
 def bisectsize( box, a, b, text):
+
+	# returns the optimal font_size
+	# textsize() sets the global wrappedtext
 
 	mid = abs(b-a) // 2
 
@@ -330,7 +329,8 @@ def bisectsize( box, a, b, text):
 			return a
 
 		else:
-			return testsize( box, a-1, text)
+			testsize( box, a-1, text)
+			return a-1
 	else:
 
 		if ( testsize( box, a+mid, text ) is None ):
@@ -344,7 +344,6 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 
 	font_size = bisectsize( box, fontsize_min, fontsize_max, text )
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
-
 
 def stwrite3(message):
 	global disp,img,stationimg
@@ -885,6 +884,10 @@ if __name__ == '__main__':
 					icyinfo = ""
 
 				if icyinfo != last_icyinfo:
+
+					# font_size müsste 22 sein, ist nur 20
+					icyinfo="Interview mit Günter Krings, CDU, Mitglied im Rechtsausschuss des Bundestags, Christoph Heinemann"
+
 					stwrite3(icyinfo)
 					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 					last_icyinfo = icyinfo
