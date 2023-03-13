@@ -885,9 +885,6 @@ if __name__ == '__main__':
 
 				if icyinfo != last_icyinfo:
 
-					# font_size müsste 22 sein, ist nur 20
-					icyinfo="Interview mit Günter Krings, CDU, Mitglied im Rechtsausschuss des Bundestags, Christoph Heinemann"
-
 					stwrite3(icyinfo)
 					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 					last_icyinfo = icyinfo
