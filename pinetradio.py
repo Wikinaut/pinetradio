@@ -33,6 +33,8 @@ showtime_every_n_seconds = 60
 # or first press only restart backliight display
 volumebutton_after_mute_direct = True
 
+global dict
+
 global anybuttonpressed
 anybuttonpressed = False
 
@@ -62,6 +64,7 @@ last_icyinfo = ""
 # sudo systemctl stop lightdm
 # sudo systemctl disable lightdm
 
+import pyphen
 import signal
 from threading import Timer
 import RPi.GPIO as GPIO
@@ -253,10 +256,32 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 		line_length_in_pixels: int):
 	lines = ['']
 
-#	split and keep the separators:
+	# print(text)
+
+	text2=['']
 	for word in re.split(r"([ /-])", text):
+		if len(word) > 14:
+			wx = dict.wrap(word,13)
+			if wx:
+				text2.append(wx[0].strip())
+				text2.append(wx[1].strip())
+			else:
+				# none indicates: no hyphenation possible
+				text2.append(word.strip())
+		else:
+			text2.append(word.strip())
+
+	text3 = " ".join(text2)
+
+	print(text," => ")
+	print(text3)
+
+#	split and keep the separators:
+#	for word in re.split(r"([ /-])", text3):
+	for word in re.split(r"([ ])", text3):
 
 		word=word.strip()
+
 		line = f'{lines[-1]} {word}'.strip()
 
 		if ( font.getlength(line) > line_length_in_pixels ):
@@ -265,6 +290,7 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 			lines[-1] = line
 
 		try:
+			# this is apparently no longer needed
 			if ( word[-1] == "-" or word[-1] == "," or word[-1] == "/" ):
 				lines.append('') # add a new line after "-" and ","
 		except:
@@ -819,6 +845,8 @@ def triggerwatchdog():
 		watchdogtimer.start()
 
 if __name__ == '__main__':
+
+	dict = pyphen.Pyphen(lang='de_DE')
 
 	setupdisplay()
 	setup_button_handlers()
