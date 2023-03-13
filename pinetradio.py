@@ -50,7 +50,12 @@ volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 4
 
 startvolstep = 4
 muted = False
+
+global last_icyinfo
 last_icyinfo = ""
+
+global icyinfo
+icyinfo= ""
 
 # Test speakers
 # aplay -L
@@ -369,7 +374,7 @@ def send_command(command):
 		pass
 
 def stationplay(stationurl):
-	global proc,icy_info
+	global proc
 
 	icyinfo = ""
 
@@ -889,7 +894,8 @@ if __name__ == '__main__':
 					res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline)
 					icyinfo = res.group(1)
 				except:
-					icyinfo = ""
+					pass
+					# icyinfo = ""
 
 				if icyinfo != last_icyinfo:
 
