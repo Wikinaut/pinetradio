@@ -35,6 +35,14 @@ volumebutton_after_mute_direct = True
 
 global dict
 
+# words longer than this will be tried to hyphenate
+global maxwordlength
+maxwordlength = 16
+
+# max length of first hyphenated part of a word
+global maxpartialwordlength
+maxpartialwordlength=10
+
 global anybuttonpressed
 anybuttonpressed = False
 
@@ -258,8 +266,8 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 
 	text2=['']
 	for word in re.split(r"([ /-])", text):
-		if len(word) > 14:
-			wx = dict.wrap(word,13)
+		if len(word) > maxwordlength:
+			wx = dict.wrap(word,maxpartialwordlength)
 			if wx:
 				text2.append(wx[0].strip())
 				text2.append(wx[1].strip())
