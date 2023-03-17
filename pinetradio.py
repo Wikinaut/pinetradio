@@ -317,11 +317,17 @@ def testsize( box, font_size, text):
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
 	wrappedtext = get_wrapped_text( text, font, disp.width )
 
+	# print("box",box)
+	#print("\nfont_size:",font_size)
+	#print("wrappedtext:\n",wrappedtext)
+
 	size = font.getsize_multiline(wrappedtext)
 
+	# print("=> size:\n",size)
+
 	if ( (size is None)
-		or ( size[0] > box[2] - box[0] )
-		or ( size[1] > box[3] - box[1] ) ):
+		or ( size[0] > box[2] - box[0] + 1 )
+		or ( size[1] > box[3] - box[1] + 1 ) ):
 		return None
 	else:
 		return size
@@ -356,6 +362,12 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 	global disp,wrappedtext,font
 
 	font_size = bisectsize( box, fontsize_min, fontsize_max, text )
+
+	# print("font_size",font_size)
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+	wrappedtext = get_wrapped_text( text, font, disp.width )
+
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
 def stwrite3(message):
@@ -898,6 +910,10 @@ if __name__ == '__main__':
 					# icyinfo = ""
 
 				if icyinfo != last_icyinfo:
+
+					# Test
+					# correct max font_size = 28
+					# icyinfo="Erdbeben-Hilfe mit Hindernissen: Enttäuschung bei Türken und Kurden in Berlin, Luise Sammann"
 
 					stwrite3(icyinfo)
 					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
