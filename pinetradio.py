@@ -62,7 +62,7 @@ icyinfo= ""
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s1
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s2
 
-# sudo apt install mpv sox libsox-fmt-mp3 libasound2-plugin-equal
+# sudo apt install mpv libmpv-dev python3-mpv sox libsox-fmt-mp3 libasound2-plugin-equal
 # apt remove pulseaudio vlc chromium-browser
 
 # edit ~/.asoundrc
