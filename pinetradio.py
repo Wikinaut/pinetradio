@@ -32,7 +32,7 @@ showtime_every_n_seconds = 60
 # after mute:
 # whether volume buttons immediately control volume
 # or first press only restart backliight display
-volumebutton_after_mute_direct = True
+volumebutton_after_mute_direct = False
 
 global dict
 
@@ -644,16 +644,18 @@ def blockvolumedecrementbutton():
 	try:
 		grace.cancel()
 	except:
-		grace = Timer( 2, gracetimer, args = () )
+		grace = Timer( 0.3, gracetimer, args = () )
 		grace.start()
 
 def handle_volumedecrement_button(pin):
 	global vol,grace,volumedecrementbuttonblock
 
+	print("0X")
 	buttonpressed(pin)
 
 	if volumedecrementbuttonblock:
 		return
+	blockvolumedecrementbutton()
 
 	display_was_on = display_is_on()
 
@@ -671,7 +673,10 @@ def handle_volumedecrement_button(pin):
 
 	time.sleep(0.2) # debounce
 	while GPIO.input(pin) == 0 and time.time()-starttime < 1:
+		print("0")
 		time.sleep(0.2)
+
+	print("1")
 
 	if time.time()-starttime >= 1:
 
@@ -684,7 +689,6 @@ def handle_volumedecrement_button(pin):
 
 		else:
 
-			blockvolumedecrementbutton()
 			mute()
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
@@ -701,10 +705,10 @@ def handle_volumedecrement_button(pin):
 			disp.display(img)
 			triggerdisplay(timeout=7)
 
-			while GPIO.input(pin) == 0 and time.time()-starttime < 4:
+			while GPIO.input(pin) == 0 and time.time()-starttime < 5:
 				time.sleep(0.2)
 
-			if time.time()-starttime > 4:
+			if time.time()-starttime > 5:
 
 				cleardisplay()
 				triggerdisplay()
