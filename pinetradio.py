@@ -37,11 +37,11 @@ global dict
 
 # words longer than this will be tried to hyphenate
 global maxwordlength
-maxwordlength = 16
+maxwordlength = 14
 
 # max length of first hyphenated part of a word
 global maxpartialwordlength
-maxpartialwordlength=10
+maxpartialwordlength=8
 
 global anybuttonpressed
 anybuttonpressed = False
@@ -662,7 +662,8 @@ def handle_volumeincrement_button(pin):
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
 			return
-	elif triggerdisplay():
+	elif not display_is_on():
+			triggerdisplay()
 			return
 
 	if vol < len(volumesteps)-1:
@@ -708,6 +709,10 @@ def handle_volumedecrement_button(pin):
 
 	starttime = time.time()
 
+#	while GPIO.input(pin) == 0 and time.time()-starttime < 1:
+#		time.sleep(0.2)
+
+	time.sleep(0.2) # debounce
 	while GPIO.input(pin) == 0 and time.time()-starttime < 1:
 		time.sleep(0.2)
 
