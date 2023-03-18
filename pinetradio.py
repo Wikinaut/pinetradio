@@ -192,6 +192,10 @@ def now():
 	currentDateAndTime = datetime.now()
 	return currentDateAndTime.strftime("%Y%m%d%H%M%S")
 
+def timenow():
+	currentDateAndTime = datetime.now()
+	return currentDateAndTime.strftime("%H:%M:%S")
+
 def cleardisplay():
 	global img,draw,stationimg
 	img = Image.new('RGB', (disp.width, disp.height), color="black")
@@ -380,7 +384,7 @@ def unmute():
 
 def stationplay(stationurl):
 
-	print( now() + " " + stationurl )
+	# print( now() + " " + stationurl )
 
 	try:
 		stationselecttimer.cancel()
@@ -576,7 +580,7 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 		"{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
 	draw.text( ( 120, 160 ),
-		"{0}".format(now()), font=font, fill="white", anchor="mm" )
+		"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
 	showvolume(draw,"white","black")
 	disp.display(timeimg)
 
@@ -688,7 +692,7 @@ def handle_volumedecrement_button(pin):
 
 			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
 			draw.text( ( 120, 160 ),
-				"{0}".format(now()), font=font, fill="white", anchor="mm" )
+				"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
 
 			disp.display(img)
 			triggerdisplay(timeout=7)
@@ -826,7 +830,7 @@ def make_observer(player_name):
 
 		try:
 			icyinfo = prop_val['icy-title']
-			print( now() + " " + icyinfo )
+			# print( now() + " " + icyinfo )
 
 			if icyinfo != last_icyinfo:
 
