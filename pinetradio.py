@@ -854,7 +854,7 @@ if __name__ == '__main__':
 
 	player = mpv.MPV()
 	player.ao="alsa"
-	player.volumemax="600.0"
+	player.volumemax="1000.0"
 	player.ao="alsa"
 	player.mute = False
 
