@@ -1,8 +1,15 @@
 # pinetradio
 RaspberryPi Internetradio
 
-for Raspberry Zero WH plus Pirate Audio HAT with LCD-Display 240x240 pixel
+for 
 
+* Raspberry Zero WH 
+* plus Pirate Audio HAT with LCD-Display 240x240 pixel
+* using mpv engine (python3-mpv library wrapper)
+* advanced Icy-Title rendering: trying to display the title with maximum font size and hyphenation on the 240x240 pixel display
+* medium volume-decrement press: mute
+* long volume-decrement press: controlled shutdown
+* time display every minute
 
 #### special requirements
 
