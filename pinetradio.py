@@ -394,7 +394,7 @@ def stationplay(stationurl):
 	if player.mute:
 		startvolume = 0
 	else:
-		startvolume = volumesteps[vol]
+		startvolume = 1.0*volumesteps[vol]
 
 	player.volume = startvolume
 	player.play(stationurl)
@@ -419,7 +419,7 @@ def handle_button(pin):
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
 def sendvolume(volume):
-	player.volume = volume
+	player.volume = 1.0*volume
 
 def setvol(vol, graceful, show=False):
 	global volumetimer,disp,img,stationimg,volimg
@@ -853,6 +853,8 @@ if __name__ == '__main__':
 	dict = pyphen.Pyphen(lang='de_DE')
 
 	player = mpv.MPV()
+	player.ao="alsa"
+	player.volumemax="600.0"
 	player.ao="alsa"
 	player.mute = False
 
