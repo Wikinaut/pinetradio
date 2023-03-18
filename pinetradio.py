@@ -853,6 +853,7 @@ if __name__ == '__main__':
 	dict = pyphen.Pyphen(lang='de_DE')
 
 	player = mpv.MPV()
+	player.ao="alsa"
 	player.mute = False
 
 	setupdisplay()
