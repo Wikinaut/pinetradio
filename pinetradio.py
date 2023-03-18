@@ -2,6 +2,7 @@
 
 # pinetradio tiny internet radio with Raspberry Zero WH and Pirate-Audi HAT
 #
+#      20230318 Version for mpv
 # init 20230218
 
 STATIONS = [
@@ -49,7 +50,6 @@ anybuttonpressed = False
 volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 startvolstep = 4
-muted = False
 
 global last_icyinfo
 last_icyinfo = ""
@@ -77,6 +77,7 @@ icyinfo= ""
 # sudo systemctl stop lightdm
 # sudo systemctl disable lightdm
 
+import mpv
 import pyphen
 import signal
 from threading import Timer
@@ -189,7 +190,7 @@ disp = ST7789.ST7789(
 
 def now():
 	currentDateAndTime = datetime.now()
-	return currentDateAndTime.strftime("%H:%M:%S")
+	return currentDateAndTime.strftime("%Y%m%d%H%M%S")
 
 def cleardisplay():
 	global img,draw,stationimg
@@ -317,13 +318,7 @@ def testsize( box, font_size, text):
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
 	wrappedtext = get_wrapped_text( text, font, disp.width )
 
-	# print("box",box)
-	#print("\nfont_size:",font_size)
-	#print("wrappedtext:\n",wrappedtext)
-
 	size = font.getsize_multiline(wrappedtext)
-
-	# print("=> size:\n",size)
 
 	if ( (size is None)
 		or ( size[0] > box[2] - box[0] + 1 )
@@ -363,8 +358,6 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 
 	font_size = bisectsize( box, fontsize_min, fontsize_max, text )
 
-	# print("font_size",font_size)
-
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
 	wrappedtext = get_wrapped_text( text, font, disp.width )
 
@@ -379,72 +372,37 @@ def stwrite3(message):
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
 	disp.display(stationimg)
 
-def send_command(command):
-	try:
-		print(command, flush=True, file=proc.stdin)
-	except:
-		pass
+def mute():
+	player.mute = True
+
+def unmute():
+	player.mute = False
 
 def stationplay(stationurl):
-	global proc
 
-	icyinfo = ""
-
-	LINE_BUFFERED = 1
+	print( now() + " " + stationurl )
 
 	try:
 		stationselecttimer.cancel()
 	except:
 		pass
 
-	try:
-		kill_processes()
-
-	except NameError:
-		pass
-
-	if muted:
+	if player.mute:
 		startvolume = 0
 	else:
 		startvolume = volumesteps[vol]
 
-	proc = subprocess.Popen('/usr/bin/mplayer -slave -idle -allow-dangerous-playlist-parsing -volume {0} 1 {1}'
-		.format(startvolume,stationurl).split(),
-		stdin=subprocess.PIPE,
-		stdout=subprocess.PIPE,
-		stderr=subprocess.DEVNULL,
-		universal_newlines=True, bufsize=LINE_BUFFERED)
-
-	time.sleep(10) # wait for mplayer start up
-
-	if muted:
-		send_command("mute 1")
-	else:
-		send_command("mute 0")
-		sendvolume(startvolume)
+	player.volume = startvolume
+	player.play(stationurl)
 
 
 def kill_processes():
-	global proc,watchdogtimer,backlighttimer,showtimetimer,volumetimer,stationselecttimer
-
-	try:
-		'''Kills parent and children processess'''
-		parent = psutil.Process(proc.pid)
-		for child in parent.children(recursive=True):
-        		child.kill()
-		parent.kill()
-
-	except NameError:
-		pass
+	global watchdogtimer
 
 	os.system( "pulseaudio --kill 1>/dev/null 2>/dev/null" )
 
 	try:
 		watchdogtimer.cancel()
-#		backlightimer.cancel()
-#		showtimetimer.cancel()
-#		volumetimer.cancel()
-#		stationselecttimer.cancel()
 
 	except:
 		pass
@@ -457,7 +415,7 @@ def handle_button(pin):
     print("Button press detected on pin: {} label: {}".format(pin, label))
 
 def sendvolume(volume):
-	send_command( 'volume {} 1'.format(volume))
+	player.volume = volume
 
 def setvol(vol, graceful, show=False):
 	global volumetimer,disp,img,stationimg,volimg
@@ -541,8 +499,9 @@ def handle_radiobutton1(pin):
     playstation(stationcounter, graceful=True)
 
 def triggerdisplay(timeout=None):
+
 	if timeout is None:
-		if muted:
+		if player.mute:
 			timeout = mutedBacklightTimeout
 		else:
 			timeout = buttonBacklightTimeout
@@ -550,14 +509,12 @@ def triggerdisplay(timeout=None):
 	return not retriggerbacklight(dutycycle=100,timeout=timeout)
 
 def handle_stationincrement_button(pin):
-	global stationcounter,muted
+	global stationcounter
 
 	buttonpressed(pin)
 
-	if muted:
-		muted = False
-		send_command("mute 0")
-		send_command("play")
+	if player.mute:
+		player.mute = False
 		setvol(vol, graceful=False, show=True)
 
 	if triggerdisplay():
@@ -569,14 +526,12 @@ def handle_stationincrement_button(pin):
 
 
 def handle_stationdecrement_button(pin):
-	global stationcounter,muted
+	global stationcounter
 
 	buttonpressed(pin)
 
-	if muted:
-		muted = False
-		send_command("mute 0")
-		send_command("play")
+	if player.mute:
+		player.mute = False
 		setvol(vol, graceful=False, show=True)
 
 	if triggerdisplay():
@@ -639,25 +594,21 @@ def savevol(vol):
 def bptimerhandler(pin):
 	global anybuttonpressed
 	anybuttonpressed = False
-	# print("buttontimer ends pin",pin)
 
 def buttonpressed(pin):
 	global anybuttonpressed
 	anybuttonpressed = True
-	# print("buttontimer starts pin",pin)
 
 	bptimer = Timer( 20, bptimerhandler, args = (pin, ) )
 	bptimer.start()
 
 def handle_volumeincrement_button(pin):
-	global vol,muted
+	global vol
 
 	buttonpressed(pin)
 
-	if muted:
-		muted = False
-		send_command("mute 0")
-		# send_command("play")
+	if player.mute:
+		unmute()
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
@@ -689,7 +640,7 @@ def blockvolumedecrementbutton():
 		grace.start()
 
 def handle_volumedecrement_button(pin):
-	global vol,muted,grace,volumedecrementbuttonblock
+	global vol,grace,volumedecrementbuttonblock
 
 	buttonpressed(pin)
 
@@ -698,10 +649,8 @@ def handle_volumedecrement_button(pin):
 
 	display_was_on = display_is_on()
 
-	if muted:
-		muted = False
-		send_command("mute 0")
-		# send_command("play")
+	if player.mute:
+		unmute()
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
@@ -718,11 +667,9 @@ def handle_volumedecrement_button(pin):
 
 	if time.time()-starttime >= 1:
 
-		if muted:
+		if player.mute:
 
-			muted = False
-			send_command("mute 0")
-			# send_command("play")
+			unmute()
 			triggerdisplay()
 			if not volumebutton_after_mute_direct:
 				return
@@ -730,10 +677,7 @@ def handle_volumedecrement_button(pin):
 		else:
 
 			blockvolumedecrementbutton()
-
-			muted = True
-			send_command("mute 1")
-			# send_command("stop")
+			mute()
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
@@ -818,13 +762,13 @@ def restart():
 
 	# TODO log this
 
-	if not muted:
+	if not player.mute:
 		playstation(stationcounter, graceful=False)
 
 
 def shutdown():
 
-	print("End of the program. I was killed gracefully :)")
+	print("\nEnd of the program. I was killed gracefully :)")
 
 	setbacklight(100)
 
@@ -873,9 +817,39 @@ def triggerwatchdog():
 		watchdogtimer = Timer( watchdogTimeout, restart, args=() )
 		watchdogtimer.start()
 
+
+def make_observer(player_name):
+	def observer(_prop_name, prop_val):
+		global last_icyinfo
+
+		# print(f'{player_name}: {prop_val}')
+
+		try:
+			icyinfo = prop_val['icy-title']
+			print( now() + " " + icyinfo )
+
+			if icyinfo != last_icyinfo:
+
+				# Test
+				# correct max font_size = 28
+				# icyinfo="Erdbeben-Hilfe mit Hindernissen: Enttäuschung bei Türken und Kurden in Berlin, Luise Sammann"
+
+				stwrite3(icyinfo)
+				retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
+				last_icyinfo = icyinfo
+
+		except:
+			pass
+
+	return observer
+
+
 if __name__ == '__main__':
 
 	dict = pyphen.Pyphen(lang='de_DE')
+
+	player = mpv.MPV()
+	player.mute = False
 
 	setupdisplay()
 	setup_button_handlers()
@@ -883,46 +857,28 @@ if __name__ == '__main__':
 	killer = GracefulKiller()
 
 	kill_processes()
+
 	playstation(stationcounter, graceful=False)
+	player.observe_property('metadata', make_observer('player'))
 
 	starttime = time.time()
 
 	while not killer.killed:
 
-		for stdoutline in proc.stdout:
+		triggerwatchdog()
 
-			triggerwatchdog()
+		it = int( time.time() % showtime_every_n_seconds )
+		if it == 0:
+			showtime()
 
-			it = int( time.time() % showtime_every_n_seconds )
-			if it == 0:
-				showtime()
+		if killer.killed:
+			break
 
-			if killer.killed:
-				break
+		try:
+			setup_button_handlers()
+		except:
+			pass
 
-			try:
-				setup_button_handlers()
-			except:
-				pass
-
-			if stdoutline.startswith('ICY Info:'):
-
-				try:
-					res = re.search(r"ICY Info: StreamTitle=\'(.*?)\';", stdoutline)
-					icyinfo = res.group(1)
-				except:
-					pass
-					# icyinfo = ""
-
-				if icyinfo != last_icyinfo:
-
-					# Test
-					# correct max font_size = 28
-					# icyinfo="Erdbeben-Hilfe mit Hindernissen: Enttäuschung bei Türken und Kurden in Berlin, Luise Sammann"
-
-					stwrite3(icyinfo)
-					retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
-					last_icyinfo = icyinfo
 
 	shutdown()
 	print("Ende.")
