@@ -31,7 +31,7 @@ showtime_every_n_seconds = 60
 
 # after mute:
 # whether volume buttons immediately control volume
-# or first press only restart backliight display
+# or first press only restart backlight display
 volumebutton_after_mute_direct = True
 
 global dict
@@ -51,7 +51,7 @@ anybuttonpressed = False
 # volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
 
 # mpv
-volumesteps = [ 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 ]
+volumesteps = [ 0, 5, 8, 10, 12, 15, 17, 20, 22, 25, 28, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 ]
 
 startvolstep = 4
 
@@ -388,7 +388,11 @@ def unmute():
 
 def stationplay(stationurl):
 
+	global stationselecttimer,last_icyinfo
+
 	# print( now() + " " + stationurl )
+	stwrite3("")
+	last_icyinfo=""
 
 	try:
 		stationselecttimer.cancel()
@@ -715,7 +719,7 @@ def handle_volumedecrement_button(pin):
 				# shutdown()
 
 			else:
-				time.sleep(5-time.time()+starttime)
+				time.sleep(10-time.time()+starttime)
 				showtime(timeout=2,force=True)
 				return
 
@@ -811,7 +815,7 @@ def shutdown():
 		print("Shutdown")
 		os.system("sudo shutdown -h now")
 
-	sys.exit()
+	return
 
 def triggerwatchdog():
 	global watchdogtimer
@@ -857,6 +861,7 @@ if __name__ == '__main__':
 	dict = pyphen.Pyphen(lang='de_DE')
 
 	player = mpv.MPV()
+
 	player.ao="alsa"
 	player.volumemax="1000.0"
 	player.ao="alsa"
@@ -876,7 +881,8 @@ if __name__ == '__main__':
 
 	while not killer.killed:
 
-		triggerwatchdog()
+		time.sleep(1)
+		# triggerwatchdog()
 
 		it = int( time.time() % showtime_every_n_seconds )
 		if it == 0:
@@ -884,12 +890,6 @@ if __name__ == '__main__':
 
 		if killer.killed:
 			break
-
-		try:
-			setup_button_handlers()
-		except:
-			pass
-
 
 	shutdown()
 	print("Ende.")
