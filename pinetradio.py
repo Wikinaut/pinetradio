@@ -23,10 +23,10 @@ STATIONS = [
 ]
 
 graceperiod = 2.0 # seconds between new station is actually selected
-buttonBacklightTimeout = 10
-mutedBacklightTimeout = 3
+buttonBacklightTimeout = 20
+mutedBacklightTimeout = 5
 icyBacklightTimeout = 10
-showtimeTimeout = 4
+showtimeTimeout = 5
 short_showtimeTimeout = 1.5
 watchdogTimeout = 15 # Test
 showtime_every_n_seconds = 60
@@ -56,6 +56,10 @@ anybuttonpressed = False
 volumesteps = [ 0, 5, 8, 10, 12, 15, 17, 20, 22, 25, 28, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 ]
 
 startvolstep = 4
+
+# Code for special operations (pin numbers)
+# for example: showtime
+code5656 = [5,6,5,6]
 
 global last_icyinfo
 last_icyinfo = ""
@@ -101,7 +105,7 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import socket
-
+from typing import Sequence
 
 stationcfgfile = "/home/pi/pinetradio.station.cfg"
 volumecfgfile = "/home/pi/pinetradio.volume.cfg"
@@ -195,6 +199,9 @@ PIN = {
 	'X': 16,
 	'Y': 24
 }
+
+global buttonqueue
+buttonqueue = []
 
 # Set up RPi.GPIO with the "BCM" numbering scheme
 GPIO.setmode(GPIO.BCM)
@@ -595,8 +602,6 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 
 	# suppress time display when a button was pressed recently
 
-	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
-
 	if anybuttonpressed and not force:
 		return
 
@@ -612,6 +617,8 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 			showtimetime.cancel()
 		except:
 			pass
+
+	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
 
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
@@ -639,15 +646,42 @@ def savevol(vol):
 	f.write(str(vol))
 	f.close()
 
+def seqmatch(needle,haystack):
+
+	ln=len(needle)
+	lh=len(haystack)
+
+	for i in range(lh-ln+1):
+		if needle==haystack[i:i+ln]:
+			return True
+	return False
+
 def bptimerhandler(pin):
-	global anybuttonpressed
+	global anybuttonpressed,buttonqueue
 	anybuttonpressed = False
+	buttonqueue.clear()
 
 def buttonpressed(pin):
-	global anybuttonpressed
+	global anybuttonpressed,bptimer,buttonqueue
 	anybuttonpressed = True
+	buttonqueue.append(pin)
 
-	bptimer = Timer( 20, bptimerhandler, args = (pin, ) )
+	# print(buttonqueue)
+	if seqmatch(code5656,buttonqueue):
+		# print("Code {} found!".format(code))
+		buttonqueue.clear()
+		showtime(timeout=20,force=True)
+		time.sleep(20)
+		return
+
+	try:
+		bptimer.cancel()
+
+	except:
+		pass
+
+	# suppress showtime for 90 seconds after the last key press
+	bptimer = Timer( 90, bptimerhandler, args = (pin, ) )
 	bptimer.start()
 
 def handle_volumeincrement_button(pin):
@@ -925,5 +959,6 @@ if __name__ == '__main__':
 		if killer.killed:
 			break
 
+	print("\nShutdown signal received.")
 	shutdown()
 	print("\nEnd of the program. I was killed gracefully :)")
