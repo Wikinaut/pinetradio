@@ -5,6 +5,8 @@
 #      20230318 Version for mpv
 # init 20230218
 
+networkadapter="wlan0"
+
 STATIONS = [
 	[ "DLF Kultur", "http://st02.dlf.de/dlf/02/128/mp3/stream.mp3" ],
 	[ "DLF", "http://st01.dlf.de/dlf/01/128/mp3/stream.mp3" ],
@@ -98,6 +100,8 @@ import ST7789
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+import socket
+
 
 stationcfgfile = "/home/pi/pinetradio.station.cfg"
 volumecfgfile = "/home/pi/pinetradio.volume.cfg"
@@ -133,6 +137,35 @@ try:
 
 except IOError:
 	vol = startvolstep
+
+
+# Get signal strength and basic network adapter parameters
+
+def get_networkinfo(interface):    # ie, 'wlan0'
+    proc = subprocess.Popen(
+	["iwlist", interface, "scan"],
+	stdout=subprocess.PIPE,
+	universal_newlines=True)
+    out, err = proc.communicate()
+    out = out.split("\n")
+
+    for i, val in enumerate(out):
+
+        if 'Signal' in val:
+            signal_line = val.split()
+            if 'Signal' in signal_line:
+                rssi = int(signal_line[signal_line.index('Signal')+1].split('=')[1])
+
+        if 'ESSID' in val:
+            # ESSID:"MYNETWORKSSID"
+            ssid_line = val.split('"')
+            ssid = ssid_line[1]
+
+        hostname = socket.gethostname()
+        ipaddr= socket.gethostbyname(hostname)
+
+    return hostname,ipaddr,ssid,rssi
+
 
 # https://stackoverflow.com/questions/18499497/how-to-process-sigterm-signal-gracefully
 class GracefulKiller:
@@ -565,6 +598,8 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 
 	# suppress time display when a button was pressed recently
 
+	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
+
 	if anybuttonpressed and not force:
 		return
 
@@ -583,9 +618,13 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
-	draw.text( ( 120, 50 ),
-		"{0}\n{1}\n{2}".format(hostname,githash[0],githash[1]), font=font, fill="white", anchor="mm" )
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
+	draw.text( ( 120, 70 ),
+		"{0}\n{3}\n{1}\n{2}\n{4}\n{5} dB".
+		format(hostname,githash[0],githash[1],ipaddr,ssid,rssi),
+		font=font, fill="white", anchor="mm" )
+
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
 	draw.text( ( 120, 160 ),
 		"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
@@ -596,7 +635,9 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 
 	if not is_showtimeOn or force:
 		showtimetimer = Timer( timeout+1.0, showcurrentimg, args=() )
+
 		showtimetimer.start()
+
 
 def savevol(vol):
 	f = open( volumecfgfile, "w")
@@ -654,7 +695,6 @@ def blockvolumedecrementbutton():
 def handle_volumedecrement_button(pin):
 	global vol,grace,volumedecrementbuttonblock
 
-	print("0X")
 	buttonpressed(pin)
 
 	if volumedecrementbuttonblock:
@@ -677,10 +717,7 @@ def handle_volumedecrement_button(pin):
 
 	time.sleep(0.2) # debounce
 	while GPIO.input(pin) == 0 and time.time()-starttime < 1:
-		print("0")
 		time.sleep(0.2)
-
-	print("1")
 
 	if time.time()-starttime >= 1:
 
@@ -724,7 +761,7 @@ def handle_volumedecrement_button(pin):
 
 			else:
 				time.sleep(10-time.time()+starttime)
-				showtime(timeout=2,force=True)
+				showtime(timeout=5,force=True)
 				return
 
 	else:
