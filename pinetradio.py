@@ -408,16 +408,10 @@ def stwrite3(message):
 	global disp,img,stationimg
 
 	stationimg = img.copy()
-
 	draw = ImageDraw.Draw(stationimg)
+
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
 	disp.display(stationimg)
-
-def mute():
-	player.mute = True
-
-def unmute():
-	player.mute = False
 
 def stationplay(stationurl):
 
@@ -588,13 +582,16 @@ def handle_stationdecrement_button(pin):
 
 def showcurrentimg():
 	global volimg,stationimg
-	try:
-		disp.display(volimg)
-	except:
-		disp.display(stationimg)
+#	try:
+#		disp.display(volimg)
+#	except:
+#		disp.display(stationimg)
+
+	disp.display(stationimg)
+
 
 def showtime(timeout=short_showtimeTimeout,force=False):
-	global stationimg,showtimetimer
+	global showtimetimer
 
 	# suppress time display when a button was pressed recently
 
@@ -635,9 +632,7 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 
 	if not is_showtimeOn or force:
 		showtimetimer = Timer( timeout+1.0, showcurrentimg, args=() )
-
 		showtimetimer.start()
-
 
 def savevol(vol):
 	f = open( volumecfgfile, "w")
@@ -661,7 +656,7 @@ def handle_volumeincrement_button(pin):
 	buttonpressed(pin)
 
 	if player.mute:
-		unmute()
+		player.mute = False
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
@@ -704,7 +699,7 @@ def handle_volumedecrement_button(pin):
 	display_was_on = display_is_on()
 
 	if player.mute:
-		unmute()
+		player.mute = False
 		setvol(vol, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
@@ -723,14 +718,15 @@ def handle_volumedecrement_button(pin):
 
 		if player.mute:
 
-			unmute()
+			player.mute = False
+
 			triggerdisplay()
 			if not volumebutton_after_mute_direct:
 				return
 
 		else:
 
-			mute()
+			player.mute = True
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
@@ -744,7 +740,7 @@ def handle_volumedecrement_button(pin):
 				"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
 
 			disp.display(img)
-			triggerdisplay(timeout=7)
+			triggerdisplay(timeout=10)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 5:
 				time.sleep(0.2)
@@ -761,7 +757,7 @@ def handle_volumedecrement_button(pin):
 
 			else:
 				time.sleep(10-time.time()+starttime)
-				showtime(timeout=5,force=True)
+				showtime(timeout=10,force=True)
 				return
 
 	else:
@@ -820,8 +816,6 @@ def restart():
 
 
 def shutdown():
-
-	print("\nEnd of the program. I was killed gracefully :)")
 
 	setbacklight(100)
 
@@ -905,7 +899,6 @@ if __name__ == '__main__':
 
 	player.ao="alsa"
 	player.volumemax="1000.0"
-	player.ao="alsa"
 	player.mute = False
 
 	setupdisplay()
@@ -933,4 +926,4 @@ if __name__ == '__main__':
 			break
 
 	shutdown()
-	print("Ende.")
+	print("\nEnd of the program. I was killed gracefully :)")
