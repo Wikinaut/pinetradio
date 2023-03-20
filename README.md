@@ -33,7 +33,7 @@ RaspberryPi Internetradio
 
 * add two rotary encoders for station / volume control
 * `cronplay`: a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
-Example: play a certain news station every hour 
+Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station. 
 
 #### special requirements
 
