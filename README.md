@@ -10,6 +10,7 @@ for
 * medium volume-decrement press: mute
 * long volume-decrement press: controlled shutdown
 * time display every minute
+* display of basic network connection info (hostname, IP, SSID, signal strength)
 
 #### special requirements
 
