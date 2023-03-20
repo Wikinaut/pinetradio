@@ -82,6 +82,9 @@ icyinfo= ""
 
 # jackd -R -dalsa
 
+# List all audiodevices
+# mpv --audio-device=help
+#
 # Test
 # mpv --audio-device=alsa/plugmixequal http://www.radioeins.de/livemp3 --volume=50 --cache=no
 
@@ -613,8 +616,6 @@ def showcurrentimg():
 def showtime(timeout=short_showtimeTimeout,force=False):
 	global showtimetimer
 
-	beep(volumepercent=50)
-
 	# suppress time display when a button was pressed recently
 
 	if anybuttonpressed and not force:
@@ -948,22 +949,16 @@ if __name__ == '__main__':
 
 	dict = pyphen.Pyphen(lang='de_DE')
 
-	player = mpv.MPV()
+	options= { 	'audio_device':'alsa/plugmixequal',
+			'volume_max':'1000.0' }
 
-	soundplayer = mpv.MPV()
-	soundplayer.ao="jack"
-	soundplayer.volumemax="1000.0"
-
-#	player.ao="alsa"
-	player.ao="jack"
-	player.volumemax="1000.0"
-	player.mute = False
+	player = mpv.MPV( **options )
+	soundplayer = mpv.MPV( **options )
 
 	setupdisplay()
 	setup_button_handlers()
 
 	killer = GracefulKiller()
-
 	kill_processes()
 
 	playstation(stationcounter, graceful=False)
@@ -979,6 +974,34 @@ if __name__ == '__main__':
 		it = int( time.time() % showtime_every_n_seconds )
 		if it == 0:
 			showtime()
+
+		# chime every 15 minutes
+
+		it = time.time() % 3600
+
+		if int( it ) == 0:
+			beep(volumepercent=50)
+			time.sleep(1)
+			beep(volumepercent=50)
+			time.sleep(1)
+			beep(volumepercent=50)
+			time.sleep(1)
+			beep(volumepercent=50)
+
+		if int( it ) == 45*60:
+			beep(volumepercent=50)
+			time.sleep(1)
+			beep(volumepercent=50)
+			time.sleep(1)
+			beep(volumepercent=50)
+
+		if int( it ) == 30*60:
+			beep(volumepercent=50)
+			time.sleep(1)
+			beep(volumepercent=50)
+
+		if int( it ) == 15*60:
+			beep(volumepercent=50)
 
 		if killer.killed:
 			break
