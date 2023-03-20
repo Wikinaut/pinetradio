@@ -80,6 +80,8 @@ icyinfo= ""
 # alsactl kill rescan
 # alsamixer -D equal
 
+# jackd -R -dalsa
+
 # Test
 # mpv --audio-device=alsa/plugmixequal http://www.radioeins.de/livemp3 --volume=50 --cache=no
 
@@ -116,6 +118,17 @@ volumedecrementbuttonblock = False
 
 global hostname
 hostname = os.uname()[1]
+
+def playsound(volumepercent=100, soundfile="/home/pi/beep.wav"):
+	soundplayer.volume=volumepercent*player.volume/100
+	soundplayer.play(soundfile)
+
+def beep(volumepercent=100,soundfile="/home/pi/beep.wav"):
+	playsound(volumepercent,soundfile)
+
+def click(volumepercent=100,soundfile="/home/pi/sounds/onboard-key-feedback.wav"):
+# def click(volumepercent=100,soundfile="/home/pi/sounds/button-toggle-on.wav"):
+	playsound(volumepercent,soundfile)
 
 def get_git_revision_short_hash() -> str:
 	# return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
@@ -600,6 +613,8 @@ def showcurrentimg():
 def showtime(timeout=short_showtimeTimeout,force=False):
 	global showtimetimer
 
+	beep(volumepercent=50)
+
 	# suppress time display when a button was pressed recently
 
 	if anybuttonpressed and not force:
@@ -665,6 +680,7 @@ def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
 	anybuttonpressed = True
 	buttonqueue.append(pin)
+	beep(volumepercent=50)
 
 	# print(buttonqueue)
 	if seqmatch(code5656,buttonqueue):
@@ -859,7 +875,10 @@ def shutdown():
 	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
 	disp.display(img)
 
-	kill_processes()
+	player.mute
+	soundplayer.mute
+
+	# kill_processes()
 	time.sleep(1)
 
 	def big(text):
@@ -931,7 +950,12 @@ if __name__ == '__main__':
 
 	player = mpv.MPV()
 
-	player.ao="alsa"
+	soundplayer = mpv.MPV()
+	soundplayer.ao="jack"
+	soundplayer.volumemax="1000.0"
+
+#	player.ao="alsa"
+	player.ao="jack"
 	player.volumemax="1000.0"
 	player.mute = False
 
@@ -961,4 +985,4 @@ if __name__ == '__main__':
 
 	print("\nShutdown signal received.")
 	shutdown()
-	print("\nEnd of the program. I was killed gracefully :)")
+	print("End of the program. I was killed gracefully :)")
