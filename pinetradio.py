@@ -687,13 +687,14 @@ def buttonpressed(pin):
 
 	# print(buttonqueue)
 	if seqmatch(code5656,buttonqueue):
-		beep()
 		# print("Code {} found!".format(code))
 		buttonqueue.clear()
 		showtime(timeout=20,force=True)
-		time.sleep(0.3)
+		time.sleep(1)
 		beep()
-		time.sleep(0.3)
+		time.sleep(0.5)
+		beep()
+		time.sleep(0.5)
 		beep()
 		time.sleep(10)
 		return
