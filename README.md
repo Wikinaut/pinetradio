@@ -1,14 +1,22 @@
 # pinetradio
 RaspberryPi Internetradio
 
+
+#### work in progress 
+
 for 
 
 * Raspberry Zero WH 
 * plus Pirate Audio Line-Out HAT with LCD-Display 240x240 pixel
   * Hardware: https://shop.pimoroni.com/products/pirate-audio-line-out  
   https://www.berrybase.de/pirate-audio-hat-fuer-raspberry-pi-line-out
-  * Software: https://github.com/pimoroni/pirate-audio
-* using mpv engine
+  * Software:  
+  `sudo apt install python3-rpi.gpio python3-spidev python3-pip python3-pil python3-numpy`  
+  https://github.com/pimoroni/pirate-audio  
+  ST7789 display driver https://github.com/pimoroni/st7789-python  
+  `pip install st7789`
+  
+* Audio output using `mpv` engine
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
   ` sudo apt install mpv libmpv-dev python3-mpv ` 
