@@ -1,7 +1,7 @@
 # pinetradio
 RaspberryPi Internetradio
 
-* Raspberry Zero WH 
+* Raspberry Zero WH
 * plus Pirate Audio Line-Out HAT with LCD-Display 240x240 pixel
   * Hardware: https://shop.pimoroni.com/products/pirate-audio-line-out  
   https://www.berrybase.de/pirate-audio-hat-fuer-raspberry-pi-line-out
