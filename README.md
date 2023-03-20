@@ -1,11 +1,6 @@
 # pinetradio
 RaspberryPi Internetradio
 
-
-#### work in progress 
-
-for 
-
 * Raspberry Zero WH 
 * plus Pirate Audio Line-Out HAT with LCD-Display 240x240 pixel
   * Hardware: https://shop.pimoroni.com/products/pirate-audio-line-out  
@@ -30,7 +25,7 @@ for
 * key press signalling with beeps
 * coded key press sequences (à la port knocking) for example `A, B, A ,B` → can trigger special actions or change setting
 * display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
-* ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` send one or two audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
+* ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
 `sudo apt install libasound2-plugin-equal`
 
 
