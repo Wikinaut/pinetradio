@@ -7,6 +7,8 @@
 
 networkadapter="wlan0"
 
+# requires an alsa device with dmix properties
+
 STATIONS = [
 	[ "DLF Kultur", "http://st02.dlf.de/dlf/02/128/mp3/stream.mp3" ],
 	[ "DLF", "http://st01.dlf.de/dlf/01/128/mp3/stream.mp3" ],
@@ -685,10 +687,15 @@ def buttonpressed(pin):
 
 	# print(buttonqueue)
 	if seqmatch(code5656,buttonqueue):
+		beep()
 		# print("Code {} found!".format(code))
 		buttonqueue.clear()
 		showtime(timeout=20,force=True)
-		time.sleep(20)
+		time.sleep(0.3)
+		beep()
+		time.sleep(0.3)
+		beep()
+		time.sleep(10)
 		return
 
 	try:
