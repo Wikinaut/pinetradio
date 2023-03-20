@@ -132,10 +132,6 @@ def playsound(volumepercent=100, soundfile="/home/pi/beep.wav"):
 def beep(volumepercent=100,soundfile="/home/pi/beep.wav"):
 	playsound(volumepercent,soundfile)
 
-def click(volumepercent=100,soundfile="/home/pi/sounds/onboard-key-feedback.wav"):
-# def click(volumepercent=100,soundfile="/home/pi/sounds/button-toggle-on.wav"):
-	playsound(volumepercent,soundfile)
-
 def get_git_revision_short_hash() -> str:
 	# return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
 	return subprocess.check_output(['git',
@@ -787,6 +783,12 @@ def handle_volumedecrement_button(pin):
 		else:
 
 			player.mute = True
+
+			beep()
+			time.sleep(0.5)
+			beep()
+			time.sleep(0.5)
+			beep()
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
