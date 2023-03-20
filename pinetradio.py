@@ -95,7 +95,10 @@ icyinfo= ""
 # sudo systemctl disable lightdm
 
 import mpv
-import pyphen
+
+# we import this big thing at the latest moment
+# import pyphen
+
 import signal
 from threading import Timer
 import RPi.GPIO as GPIO
@@ -104,7 +107,6 @@ import os
 import re
 import time
 from datetime import datetime
-import math
 import subprocess
 import psutil
 import ST7789
@@ -112,7 +114,6 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import socket
-from typing import Sequence
 
 stationcfgfile = "/home/pi/pinetradio.station.cfg"
 volumecfgfile = "/home/pi/pinetradio.volume.cfg"
@@ -955,8 +956,6 @@ def make_observer(player_name):
 
 if __name__ == '__main__':
 
-	dict = pyphen.Pyphen(lang='de_DE')
-
 	options= { 	'audio_device':'alsa/plugmixequal',
 			'volume_max':'1000.0' }
 
@@ -970,13 +969,16 @@ if __name__ == '__main__':
 	kill_processes()
 
 	playstation(stationcounter, graceful=False)
+
+	import pyphen
+	dict = pyphen.Pyphen(lang='de_DE')
 	player.observe_property('metadata', make_observer('player'))
 
 	starttime = time.time()
 
 	while not killer.killed:
 
-		time.sleep(1)
+		time.sleep(0.5)
 		# triggerwatchdog()
 
 		it = int( time.time() % showtime_every_n_seconds )
@@ -986,7 +988,6 @@ if __name__ == '__main__':
 		# chime every 15 minutes
 
 		it = time.time() % 3600
-
 		if int( it ) == 0:
 			beep(volumepercent=50)
 			time.sleep(1)
