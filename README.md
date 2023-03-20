@@ -10,7 +10,8 @@ for
   * Software: https://github.com/pimoroni/pirate-audio
 * using mpv engine
   * libmpv-dev
-  * python3-mpv library wrapper
+  * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
+  ` sudo apt install mpv libmpv-dev python3-mpv ` 
 * advanced Icy-Title rendering: trying to display the title with maximum font size and hyphenation on the 240x240 pixel display
 * medium volume-decrement press: mute
 * long volume-decrement press: controlled shutdown
