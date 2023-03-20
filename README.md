@@ -27,7 +27,13 @@ RaspberryPi Internetradio
 * display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
 * ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
 `sudo apt install libasound2-plugin-equal`
+* `chime`: 1, 2, 3, 4 beeps at every hourly quarter.
 
+#### TODO / Brain storming section
+
+* add two rotary encoders for station / volume control
+* `cronplay`: a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
+Example: play a certain news station every hour 
 
 #### special requirements
 
