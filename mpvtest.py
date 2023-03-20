@@ -23,20 +23,25 @@ def make_observer(player_name):
 # using alsa + dmixer + equalizer
 # see .asoundrc
 
+# set mpv options to use the *mixing* alsa channel
 options= { 	'audio_device':'alsa/plugmixequal',
 		'volume_max':'1000.0' }
 
+# define a first player
 player = mpv.MPV( **options )
-
 player.observe_property('metadata', make_observer('player'))
-player.volume=10.0
+
+# define a second player
+player2 = mpv.MPV( **options )
 
 # Play a stream from the internet (SomaFm Groove Salad)
+player.volume=10.0
 player.play('http://ice1.somafm.com/groovesalad-128-mp3')
 
 time.sleep(5)
 
 # Play a sound file from the local filesystem
+player2.volume=20.0
 player2.play('/home/pi/beep.wav')
 
 signal.pause()
