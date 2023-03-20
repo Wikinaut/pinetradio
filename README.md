@@ -4,13 +4,21 @@ RaspberryPi Internetradio
 for 
 
 * Raspberry Zero WH 
-* plus Pirate Audio HAT with LCD-Display 240x240 pixel
-* using mpv engine (python3-mpv library wrapper)
+* plus Pirate Audio Line-Out HAT with LCD-Display 240x240 pixel
+  * Hardware: https://shop.pimoroni.com/products/pirate-audio-line-out  
+  https://www.berrybase.de/pirate-audio-hat-fuer-raspberry-pi-line-out
+  * Software: https://github.com/pimoroni/pirate-audio
+* using mpv engine
+  * libmpv-dev
+  * python3-mpv library wrapper
 * advanced Icy-Title rendering: trying to display the title with maximum font size and hyphenation on the 240x240 pixel display
 * medium volume-decrement press: mute
 * long volume-decrement press: controlled shutdown
 * time display every minute
 * display of basic network connection info (hostname, IP, SSID, signal strength)
+* key press signalling with beeps
+* coded key press sequences (à la port knocking) for example `A, B, A ,B` → can trigger special actions or change setting
+* display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
 
 #### special requirements
 
