@@ -13,7 +13,8 @@ for
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
   ` sudo apt install mpv libmpv-dev python3-mpv ` 
 * advanced Icy-Title rendering:  
-  trying to display the title with maximum font size and hyphenation on the 240x240 pixel display
+  trying to display the title with maximum font size and [hyphenation in Python](https://github.com/Kozea/Pyphen) on the 240x240 pixel display  
+  `pip install pyphen`
 * medium volume-decrement press: mute
 * long volume-decrement press: controlled shutdown
 * time display every minute
