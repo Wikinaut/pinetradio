@@ -12,7 +12,8 @@ for
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
   ` sudo apt install mpv libmpv-dev python3-mpv ` 
-* advanced Icy-Title rendering: trying to display the title with maximum font size and hyphenation on the 240x240 pixel display
+* advanced Icy-Title rendering:  
+  trying to display the title with maximum font size and hyphenation on the 240x240 pixel display
 * medium volume-decrement press: mute
 * long volume-decrement press: controlled shutdown
 * time display every minute
@@ -20,6 +21,9 @@ for
 * key press signalling with beeps
 * coded key press sequences (à la port knocking) for example `A, B, A ,B` → can trigger special actions or change setting
 * display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
+* ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` send one or two audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
+`sudo apt install libasound2-plugin-equal`
+
 
 #### special requirements
 
