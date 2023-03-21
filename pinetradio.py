@@ -700,6 +700,7 @@ def buttonpressed(pin):
 
 	if seqmatch(code5566,buttonqueue):
 		player.play(ambience)
+		player.loop_file="inf"
 		cleardisplay()
 		stwrite3(ambience)
 		return
