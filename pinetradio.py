@@ -8,10 +8,12 @@
 networkadapter="wlan0"
 ambience="/home/pi/sounds/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
 
-gongsound1 = "/home/pi/Glockenturm Drei Niedrige P Pe191101 Royalty Free.mp3"
-gongsoundlast = "/home/pi/Glockenturm 1 Schlag Ende Niedrige P Pe191101 Royalty Free.mp3"
+#gongsound1 = "/home/pi/Glockenturm Drei Niedrige P Pe191101 Royalty Free.mp3"
+#gongsoundlast = "/home/pi/Glockenturm 1 Schlag Ende Niedrige P Pe191101 Royalty Free.mp3"
+gongsound1 = "/home/pi/Glockenturm1.wav"
+gongsoundlast = "/home/pi/GlockenturmLast.wav"
 beepsound = "/home/pi/beep.wav"
-servicebellsound = "/home/pi/service-bell-receptionsklingel.mp3"
+servicebellsound = "/home/pi/service-bell-receptionsklingel.wav"
 
 # requires an alsa device with dmix properties
 
@@ -133,20 +135,21 @@ global hostname
 hostname = os.uname()[1]
 
 def playsound(volumepercent=100, soundfile=beepsound):
+	# print( f"playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
 
 def beep(volumepercent=100,soundfile=beepsound):
 	playsound(volumepercent,soundfile)
 
-def gong1(volumepercent=30,soundfile=gongsound1):
+def gong1(volumepercent=35,soundfile=gongsound1):
 	playsound(volumepercent,soundfile)
-	time.sleep(5.73)
+	time.sleep(2.810)
 
-def gonglast(volumepercent=30,soundfile=gongsoundlast):
+def gonglast(volumepercent=35,soundfile=gongsoundlast):
 	playsound(volumepercent,soundfile)
 
-def servicebell(volumepercent=30,soundfile=servicebellsound):
+def servicebell(volumepercent=35,soundfile=servicebellsound):
 	playsound(volumepercent,soundfile)
 
 def get_git_revision_short_hash() -> str:
@@ -986,6 +989,7 @@ if __name__ == '__main__':
 
 	player = mpv.MPV( **options )
 	soundplayer = mpv.MPV( **options )
+
 	servicebell()
 
 	setupdisplay()
@@ -1021,7 +1025,7 @@ if __name__ == '__main__':
 		# chime every 15 minutes
 
 		it = time.time() % 3600
-		if int( it ) == 0:
+		if int( it ) == 4*60:
 			gong1()
 			gong1()
 			gong1()
