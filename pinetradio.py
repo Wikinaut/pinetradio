@@ -6,6 +6,7 @@
 # init 20230218
 
 networkadapter="wlan0"
+ambience="/home/pi/sounds/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
 
 # requires an alsa device with dmix properties
 
@@ -62,6 +63,7 @@ startvolstep = 4
 # Code for special operations (pin numbers)
 # for example: showtime
 code5656 = [5,6,5,6]
+code5566 = [5,5,6,6]
 
 global last_icyinfo
 last_icyinfo = ""
@@ -694,6 +696,12 @@ def buttonpressed(pin):
 		time.sleep(0.5)
 		beep()
 		time.sleep(10)
+		return
+
+	if seqmatch(code5566,buttonqueue):
+		player.play(ambience)
+		cleardisplay()
+		stwrite3(ambience)
 		return
 
 	try:
