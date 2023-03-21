@@ -2,20 +2,20 @@
 
 # pinetradio tiny internet radio with Raspberry Zero WH and Pirate-Audi HAT
 #
+# requires an alsa device with dmix properties
+#
 #      20230318 Version for mpv
 # init 20230218
+
 
 networkadapter="wlan0"
 ambience="/home/pi/sounds/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
 
-#gongsound1 = "/home/pi/Glockenturm Drei Niedrige P Pe191101 Royalty Free.mp3"
-#gongsoundlast = "/home/pi/Glockenturm 1 Schlag Ende Niedrige P Pe191101 Royalty Free.mp3"
 gongsound1 = "/home/pi/Glockenturm1.wav"
 gongsoundlast = "/home/pi/GlockenturmLast.wav"
 beepsound = "/home/pi/beep.wav"
 servicebellsound = "/home/pi/service-bell-receptionsklingel.wav"
 
-# requires an alsa device with dmix properties
 
 STATIONS = [
 	[ "DLF Kultur", "http://st02.dlf.de/dlf/02/128/mp3/stream.mp3" ],
@@ -59,12 +59,7 @@ maxpartialwordlength=8
 global anybuttonpressed
 anybuttonpressed = False
 
-# mplayer
-# volumesteps = [ 0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 100 ]
-
-# mpv
 volumesteps = [ 0, 5, 8, 10, 12, 15, 17, 20, 22, 25, 28, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 ]
-
 startvolstep = 4
 
 # Code for special operations (pin numbers)
@@ -83,15 +78,13 @@ icyinfo= ""
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s1
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s2
 
-# sudo apt install mpv libmpv-dev python3-mpv sox libsox-fmt-mp3 libasound2-plugin-equal
+# sudo apt install mpv libmpv-dev python3-mpv libasound2-plugin-equal
 # apt remove pulseaudio vlc chromium-browser
 
 # edit ~/.asoundrc
 
 # alsactl kill rescan
 # alsamixer -D equal
-
-# jackd -R -dalsa
 
 # List all audiodevices
 # mpv --audio-device=help
@@ -105,7 +98,8 @@ icyinfo= ""
 
 import mpv
 
-# we import this big thing at the latest moment
+# we import this big thing - the hyphenation library - at the latest moment, after playing
+# lazy loading later
 # import pyphen
 
 import signal
@@ -117,7 +111,6 @@ import re
 import time
 from datetime import datetime
 import subprocess
-import psutil
 import ST7789
 from PIL import Image
 from PIL import ImageDraw
@@ -137,7 +130,7 @@ hostname = os.uname()[1]
 def playsound(volumepercent=100, soundfile=beepsound):
 
 	nowtime=timenow()
-	print( f"{nowtime} playsound {soundfile} ({volumepercent} %)")
+	# print( f"{nowtime} playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
 
@@ -182,7 +175,8 @@ except IOError:
 
 # Get signal strength and basic network adapter parameters
 
-def get_networkinfo(interface):    # ie, 'wlan0'
+def get_networkinfo(interface="wlan0"):
+
     proc = subprocess.Popen(
 	["iwlist", interface, "scan"],
 	stdout=subprocess.PIPE,
@@ -198,7 +192,6 @@ def get_networkinfo(interface):    # ie, 'wlan0'
                 rssi = int(signal_line[signal_line.index('Signal')+1].split('=')[1])
 
         if 'ESSID' in val:
-            # ESSID:"MYNETWORKSSID"
             ssid_line = val.split('"')
             ssid = ssid_line[1]
 
@@ -414,7 +407,7 @@ def testsize( box, font_size, text):
 
 def bisectsize( box, a, b, text):
 
-	# returns the optimal font_size
+	# returns the optimal maximum font_size to fully fill the part of the display
 	# textsize() sets the global wrappedtext
 
 	mid = abs(b-a) // 2
@@ -461,7 +454,6 @@ def stationplay(stationurl):
 
 	global stationselecttimer,last_icyinfo
 
-	# print( now() + " " + stationurl )
 	stwrite3("")
 	last_icyinfo=""
 
@@ -626,13 +618,7 @@ def handle_stationdecrement_button(pin):
 
 def showcurrentimg():
 	global volimg,stationimg
-#	try:
-#		disp.display(volimg)
-#	except:
-#		disp.display(stationimg)
-
 	disp.display(stationimg)
-
 
 def showtime(timeout=short_showtimeTimeout,force=False):
 	global showtimetimer
@@ -704,9 +690,7 @@ def buttonpressed(pin):
 	buttonqueue.append(pin)
 	beep(volumepercent=50)
 
-	# print(buttonqueue)
 	if seqmatch(code5656,buttonqueue):
-		# print("Code {} found!".format(code))
 		buttonqueue.clear()
 		showtime(timeout=20,force=True)
 		time.sleep(1)
@@ -719,6 +703,7 @@ def buttonpressed(pin):
 		return
 
 	if seqmatch(code5566,buttonqueue):
+		buttonqueue.clear()
 		player.play(ambience)
 		player.loop_file="inf"
 		cleardisplay()
@@ -754,9 +739,6 @@ def handle_volumeincrement_button(pin):
 		vol += 1
 		savevol(vol)
 		setvol(vol, graceful=False, show=True)
-
-	# showtime()
-
 
 def gracetimer():
 	global volumedecrementbuttonblock
@@ -844,8 +826,6 @@ def handle_volumedecrement_button(pin):
 				killer.killed = True
 				killer.shutdown = True
 
-				# shutdown()
-
 			else:
 				time.sleep(10-time.time()+starttime)
 				showtime(timeout=10,force=True)
@@ -858,8 +838,6 @@ def handle_volumedecrement_button(pin):
 			vol -= 1
 			savevol(vol)
 			setvol(vol, graceful=False, show=True)
-
-	# showtime()	# after volume may be changed
 
 
 def setup_button_handlers():
@@ -898,16 +876,17 @@ def setup_button_handlers():
 
 	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
+
 def restart():
-
-	# TODO log this
-
 	if not player.mute:
 		playstation(stationcounter, graceful=False)
 
 
 def shutdown():
 
+	beep()
+	time.sleep(0.2)
+	beep()
 	setbacklight(100)
 
 	img = Image.new('RGB', (disp.width, disp.height), color="red")
@@ -916,10 +895,9 @@ def shutdown():
 	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
 	disp.display(img)
 
-	player.mute
-	soundplayer.mute
+	player.quit()
+	soundplayer.quit()
 
-	# kill_processes()
 	time.sleep(1)
 
 	def big(text):
@@ -984,10 +962,23 @@ def make_observer(player_name):
 
 	return observer
 
+def soundplayer_is_playing():
+	return not soundplayer.core_idle
+
+def player_is_playing():
+	return not player.core_idle
+
 
 if __name__ == '__main__':
 
-	options= { 'audio_device':'alsa/plugmixequal', 'volume_max':'1000.0' }
+	options= {
+		'audio_device' : 'alsa/plugmixequal',
+		'volume_max' : '1000.0',
+		'keep_open' : 'no',
+		'idle' : 'yes',
+		'gapless_audio' : 'yes',
+		'audio_buffer' : '0.2'
+	}
 
 	player = mpv.MPV( **options )
 	soundplayer = mpv.MPV( **options )
@@ -1025,7 +1016,6 @@ if __name__ == '__main__':
 			showtime()
 
 		# chime every 15 minutes
-
 		minute = int ( time.time() % 3600 / 60 )
 
 		if minute == 0:
