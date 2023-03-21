@@ -8,6 +8,11 @@
 networkadapter="wlan0"
 ambience="/home/pi/sounds/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
 
+gongsound1 = "/home/pi/Glockenturm Drei Niedrige P Pe191101 Royalty Free.mp3"
+gongsoundlast = "/home/pi/Glockenturm 1 Schlag Ende Niedrige P Pe191101 Royalty Free.mp3"
+beepsound = "/home/pi/beep.wav"
+servicebellsound = "/home/pi/service-bell-receptionsklingel.mp3"
+
 # requires an alsa device with dmix properties
 
 STATIONS = [
@@ -127,11 +132,21 @@ volumedecrementbuttonblock = False
 global hostname
 hostname = os.uname()[1]
 
-def playsound(volumepercent=100, soundfile="/home/pi/beep.wav"):
+def playsound(volumepercent=100, soundfile=beepsound):
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
 
-def beep(volumepercent=100,soundfile="/home/pi/beep.wav"):
+def beep(volumepercent=100,soundfile=beepsound):
+	playsound(volumepercent,soundfile)
+
+def gong1(volumepercent=30,soundfile=gongsound1):
+	playsound(volumepercent,soundfile)
+	time.sleep(5.73)
+
+def gonglast(volumepercent=30,soundfile=gongsoundlast):
+	playsound(volumepercent,soundfile)
+
+def servicebell(volumepercent=30,soundfile=servicebellsound):
 	playsound(volumepercent,soundfile)
 
 def get_git_revision_short_hash() -> str:
@@ -967,11 +982,11 @@ def make_observer(player_name):
 
 if __name__ == '__main__':
 
-	options= { 	'audio_device':'alsa/plugmixequal',
-			'volume_max':'1000.0' }
+	options= { 'audio_device':'alsa/plugmixequal', 'volume_max':'1000.0' }
 
 	player = mpv.MPV( **options )
 	soundplayer = mpv.MPV( **options )
+	servicebell()
 
 	setupdisplay()
 	setup_button_handlers()
@@ -981,9 +996,16 @@ if __name__ == '__main__':
 
 	playstation(stationcounter, graceful=False)
 
+	starttime= time.time()
+	print("Import of pyphen started.")
 	import pyphen
 	dict = pyphen.Pyphen(lang='de_DE')
+
+	deltat= time.time()-starttime
+	print(f"pyphen imported, loading of de_DE took {deltat:.2f} seconds on Raspberry Pi Zero")
+
 	player.observe_property('metadata', make_observer('player'))
+
 
 	starttime = time.time()
 
@@ -1000,28 +1022,22 @@ if __name__ == '__main__':
 
 		it = time.time() % 3600
 		if int( it ) == 0:
-			beep(volumepercent=50)
-			time.sleep(1)
-			beep(volumepercent=50)
-			time.sleep(1)
-			beep(volumepercent=50)
-			time.sleep(1)
-			beep(volumepercent=50)
+			gong1()
+			gong1()
+			gong1()
+			gonglast()
 
 		if int( it ) == 45*60:
-			beep(volumepercent=50)
-			time.sleep(1)
-			beep(volumepercent=50)
-			time.sleep(1)
-			beep(volumepercent=50)
+			gong1()
+			gong1()
+			gonglast()
 
 		if int( it ) == 30*60:
-			beep(volumepercent=50)
-			time.sleep(1)
-			beep(volumepercent=50)
+			gong1()
+			gonglast()
 
 		if int( it ) == 15*60:
-			beep(volumepercent=50)
+			gonglast()
 
 		if killer.killed:
 			break
