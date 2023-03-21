@@ -137,11 +137,11 @@ def playsound(volumepercent=100, soundfile=beepsound):
 def beep(volumepercent=100,soundfile=beepsound):
 	playsound(volumepercent,soundfile)
 
-def gong1(volumepercent=25,soundfile=gongsound1):
+def gong1(volumepercent=70,soundfile=gongsound1):
 	playsound(volumepercent,soundfile)
 	time.sleep(2.810)
 
-def gonglast(volumepercent=25,soundfile=gongsoundlast):
+def gonglast(volumepercent=70,soundfile=gongsoundlast):
 	playsound(volumepercent,soundfile)
 
 def servicebell(volumepercent=25,soundfile=servicebellsound):
