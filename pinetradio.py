@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# pinetradio tiny internet radio with Raspberry Zero WH and Pirate-Audi HAT
+# pinetradio tiny internet radio with Raspberry Zero WH and Pirate-Audio HAT
 #
 # requires an alsa device with dmix properties
 #
