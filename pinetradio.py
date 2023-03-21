@@ -135,21 +135,23 @@ global hostname
 hostname = os.uname()[1]
 
 def playsound(volumepercent=100, soundfile=beepsound):
-	# print( f"playsound {soundfile} ({volumepercent} %)")
+
+	nowtime=timenow()
+	print( f"{nowtime} playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
 
 def beep(volumepercent=100,soundfile=beepsound):
 	playsound(volumepercent,soundfile)
 
-def gong1(volumepercent=35,soundfile=gongsound1):
+def gong1(volumepercent=25,soundfile=gongsound1):
 	playsound(volumepercent,soundfile)
 	time.sleep(2.810)
 
-def gonglast(volumepercent=35,soundfile=gongsoundlast):
+def gonglast(volumepercent=25,soundfile=gongsoundlast):
 	playsound(volumepercent,soundfile)
 
-def servicebell(volumepercent=35,soundfile=servicebellsound):
+def servicebell(volumepercent=25,soundfile=servicebellsound):
 	playsound(volumepercent,soundfile)
 
 def get_git_revision_short_hash() -> str:
@@ -1024,24 +1026,29 @@ if __name__ == '__main__':
 
 		# chime every 15 minutes
 
-		it = time.time() % 3600
-		if int( it ) == 4*60:
-			gong1()
-			gong1()
-			gong1()
-			gonglast()
+		minute = int ( time.time() % 3600 / 60 )
 
-		if int( it ) == 45*60:
+		if minute == 0:
+			gong1()
 			gong1()
 			gong1()
 			gonglast()
+			time.sleep(60)
 
-		if int( it ) == 30*60:
+		if minute == 45:
+			gong1()
 			gong1()
 			gonglast()
+			time.sleep(60)
 
-		if int( it ) == 15*60:
+		if minute == 30:
+			gong1()
 			gonglast()
+			time.sleep(60)
+
+		if minute == 15:
+			gonglast()
+			time.sleep(60)
 
 		if killer.killed:
 			break
