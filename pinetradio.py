@@ -795,12 +795,6 @@ def handle_volumedecrement_button(pin):
 
 			player.mute = True
 
-			beep()
-			time.sleep(0.5)
-			beep()
-			time.sleep(0.5)
-			beep()
-
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
 
@@ -813,6 +807,7 @@ def handle_volumedecrement_button(pin):
 				"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
 
 			disp.display(img)
+
 			triggerdisplay(timeout=10)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 5:
@@ -827,6 +822,12 @@ def handle_volumedecrement_button(pin):
 				killer.shutdown = True
 
 			else:
+				beep()
+				time.sleep(0.5)
+				beep()
+				time.sleep(0.5)
+				beep()
+
 				time.sleep(10-time.time()+starttime)
 				showtime(timeout=10,force=True)
 				return
