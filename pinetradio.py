@@ -47,8 +47,6 @@ showtime_every_n_seconds = 60
 volumebutton_after_mute_direct = False
 
 global dict
-global threads
-threads = []
 
 # words longer than this will be tried to hyphenate
 global maxwordlength
@@ -82,6 +80,7 @@ icyinfo= ""
 
 # sudo apt install mpv libmpv-dev python3-mpv libasound2-plugin-equal
 # apt remove pulseaudio vlc chromium-browser
+# pip install pyphen
 
 # edit ~/.asoundrc
 
@@ -137,48 +136,60 @@ def playsound(volumepercent=100, soundfile=beepsound):
 	soundplayer.play(soundfile)
 	soundplayer.wait_for_playback()
 
-#def gong1(volumepercent=70,soundfile=gongsound1):
-#	playsound(volumepercent,soundfile)
-#
-#def gonglast(volumepercent=70,soundfile=gongsoundlast):
-#	playsound(volumepercent,soundfile)
-#
-#def servicebell(volumepercent=25,soundfile=servicebellsound):
-#	playsound(volumepercent,soundfile)
-
 def threadedPlaysoundFunction(volumepercent,soundfile):
 	playsound(volumepercent,soundfile)
 
 def beep(volumepercent=100,soundfile=beepsound):
-	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
-	threads.append(t)
+	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
 
 def servicebell(volumepercent=25,soundfile=servicebellsound):
-	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
-	threads.append(t)
+	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
+
+def gong1Function(volumepercent):
+	playsound(volumepercent,gongsoundlast)
 
 def gong1(volumepercent=70,soundfile=gongsound1):
-	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
-	threads.append(t)
+	t = Thread( target=gong1Function, daemon=True, args=( volumepercent, ) )
 	t.start()
 
-def gonglast(volumepercent=100,soundfile=gongsoundlast):
-	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
-	threads.append(t)
+def gong2Function(volumepercent):
+	playsound(volumepercent,gongsound1)
+	playsound(volumepercent,gongsoundlast)
+
+def gong2(volumepercent=70,soundfile=gongsound1):
+	t = Thread( target=gong2Function, daemon=True, args=( volumepercent, ) )
 	t.start()
 
-def threadedBeep3Function():
-	beep()
-	time.sleep(0.5)
-	beep()
-	time.sleep(0.5)
-	beep()
+def gong3Function(volumepercent):
+	playsound(volumepercent,gongsound1)
+	playsound(volumepercent,gongsound1)
+	playsound(volumepercent,gongsoundlast)
 
-def beep3():
-	t = Thread( target=threadedBeep3Function )
-	threads.append(t)
+def gong3(volumepercent=70,soundfile=gongsound1):
+	t = Thread( target=gong3Function, daemon=True, args=( volumepercent, ) )
+	t.start()
+
+def gong4Function(volumepercent):
+	playsound(volumepercent,gongsound1)
+	playsound(volumepercent,gongsound1)
+	playsound(volumepercent,gongsound1)
+	playsound(volumepercent,gongsoundlast)
+
+def gong4(volumepercent=70,soundfile=gongsound1):
+	t = Thread( target=gong4Function, daemon=True, args=( volumepercent, ) )
+	t.start()
+
+def threadedBeep3Function(volumepercent):
+	playsound(volumepercent,beepsound)
+	time.sleep(0.5)
+	playsound(volumepercent,beepsound)
+	time.sleep(0.5)
+	playsound(volumepercent,beepsound)
+
+def beep3(volumepercent=50):
+	t = Thread( target=threadedBeep3Function, daemon=True, args=(volumepercent, ) )
 	t.start()
 
 def get_git_revision_short_hash() -> str:
@@ -943,11 +954,6 @@ def shutdown():
 	cleardisplay()
 	disp.display(img)
 
-	# now kill all threads
-
-	for t in threads:
-		t.join()
-
 	player.quit()
 	soundplayer.quit()
 
@@ -1051,25 +1057,19 @@ if __name__ == '__main__':
 		minute = int ( time.time() % 3600 / 60 )
 
 		if minute == 0:
-			gong1()
-			gong1()
-			gong1()
-			gonglast()
+			gong4()
 			time.sleep(60)
 
 		if minute == 45:
-			gong1()
-			gong1()
-			gonglast()
+			gong3()
 			time.sleep(60)
 
 		if minute == 30:
-			gong1()
-			gonglast()
+			gong2()
 			time.sleep(60)
 
 		if minute == 15:
-			gonglast()
+			gong1()
 			time.sleep(60)
 
 		if killer.killed:
