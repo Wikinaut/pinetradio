@@ -10,6 +10,8 @@
 
 networkadapter="wlan0"
 ambience="/home/pi/sounds/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
+minimal1="/home/pi/sounds/minimal/Simeon ten Holt ‎- Canto Ostinato (1979) - Original 1984 Live Recording.mp3"
+minimal2="/home/pi/sounds/minimal/Arvo Pärt - Für Alina (1976).mp3"
 
 gongsound1 = "/home/pi/Glockenturm1.wav"
 gongsoundlast = "/home/pi/GlockenturmLast.wav"
@@ -66,6 +68,8 @@ startvolstep = 4
 # for example: showtime
 code5656 = [5,6,5,6]
 code5566 = [5,5,6,6]
+code55566 = [5,5,5,6,6]
+code555566 = [5,5,5,5,6,6]
 
 global last_icyinfo
 last_icyinfo = ""
@@ -745,6 +749,22 @@ def buttonpressed(pin):
 		time.sleep(0.5)
 		beep()
 		time.sleep(10)
+		return
+
+	if seqmatch(code555566,buttonqueue):
+		buttonqueue.clear()
+		player.play(minimal2)
+		player.loop_file="inf"
+		cleardisplay()
+		stwrite3(minimal2)
+		return
+
+	if seqmatch(code55566,buttonqueue):
+		buttonqueue.clear()
+		player.play(minimal1)
+		player.loop_file="inf"
+		cleardisplay()
+		stwrite3(minimal1)
 		return
 
 	if seqmatch(code5566,buttonqueue):
