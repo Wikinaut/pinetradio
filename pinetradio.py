@@ -47,6 +47,8 @@ showtime_every_n_seconds = 60
 volumebutton_after_mute_direct = False
 
 global dict
+global threads
+threads = []
 
 # words longer than this will be tried to hyphenate
 global maxwordlength
@@ -103,7 +105,7 @@ import mpv
 # import pyphen
 
 import signal
-from threading import Timer
+from threading import Timer, Thread
 import RPi.GPIO as GPIO
 import sys
 import os
@@ -135,17 +137,49 @@ def playsound(volumepercent=100, soundfile=beepsound):
 	soundplayer.play(soundfile)
 	soundplayer.wait_for_playback()
 
+#def gong1(volumepercent=70,soundfile=gongsound1):
+#	playsound(volumepercent,soundfile)
+#
+#def gonglast(volumepercent=70,soundfile=gongsoundlast):
+#	playsound(volumepercent,soundfile)
+#
+#def servicebell(volumepercent=25,soundfile=servicebellsound):
+#	playsound(volumepercent,soundfile)
+
+def threadedPlaysoundFunction(volumepercent,soundfile):
+	playsound(volumepercent,soundfile)
+
 def beep(volumepercent=100,soundfile=beepsound):
-	playsound(volumepercent,soundfile)
-
-def gong1(volumepercent=70,soundfile=gongsound1):
-	playsound(volumepercent,soundfile)
-
-def gonglast(volumepercent=70,soundfile=gongsoundlast):
-	playsound(volumepercent,soundfile)
+	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
+	threads.append(t)
+	t.start()
 
 def servicebell(volumepercent=25,soundfile=servicebellsound):
-	playsound(volumepercent,soundfile)
+	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
+	threads.append(t)
+	t.start()
+
+def gong1(volumepercent=70,soundfile=gongsound1):
+	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
+	threads.append(t)
+	t.start()
+
+def gonglast(volumepercent=100,soundfile=gongsoundlast):
+	t = Thread( target=threadedPlaysoundFunction, args=( volumepercent,soundfile ) )
+	threads.append(t)
+	t.start()
+
+def threadedBeep3Function():
+	beep()
+	time.sleep(0.5)
+	beep()
+	time.sleep(0.5)
+	beep()
+
+def beep3():
+	t = Thread( target=threadedBeep3Function )
+	threads.append(t)
+	t.start()
 
 def get_git_revision_short_hash() -> str:
 	# return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
@@ -808,6 +842,8 @@ def handle_volumedecrement_button(pin):
 
 			disp.display(img)
 
+			beep3()
+
 			triggerdisplay(timeout=10)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 5:
@@ -822,11 +858,6 @@ def handle_volumedecrement_button(pin):
 				killer.shutdown = True
 
 			else:
-				beep()
-				time.sleep(0.5)
-				beep()
-				time.sleep(0.5)
-				beep()
 
 				time.sleep(10-time.time()+starttime)
 				showtime(timeout=10,force=True)
@@ -885,9 +916,7 @@ def restart():
 
 def shutdown():
 
-	beep()
-	time.sleep(0.2)
-	beep()
+	beep3()
 	setbacklight(100)
 
 	img = Image.new('RGB', (disp.width, disp.height), color="red")
@@ -895,11 +924,6 @@ def shutdown():
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
 	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
 	disp.display(img)
-
-	player.quit()
-	soundplayer.quit()
-
-	time.sleep(1)
 
 	def big(text):
 
@@ -919,10 +943,17 @@ def shutdown():
 	cleardisplay()
 	disp.display(img)
 
+	# now kill all threads
+
+	for t in threads:
+		t.join()
+
+	player.quit()
+	soundplayer.quit()
+
 	if killer.shutdown:
 		print("Shutdown")
 		os.system("sudo shutdown -h now")
-
 	return
 
 def triggerwatchdog():
