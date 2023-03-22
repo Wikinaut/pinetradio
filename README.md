@@ -39,7 +39,7 @@ Example: switch from the currently played first station to a certain second (e.g
 * check whether stream/mpv is still alive; watchdog; restart mpv.play()
 * add a quick `record` function with or without a timeout
 * `record` if certain Icy texts are detected
-* playing randomly selected "Wurfsendung" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
+* playing randomly selected "Wurfsendungen" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
 
 #### special requirements
 
