@@ -7,10 +7,15 @@
 
 import subprocess
 import socket
+from datetime import datetime
+
+def now():
+        currentDateAndTime = datetime.now()
+        return currentDateAndTime.strftime("%Y%m%d-%H%M%S")
 
 def get_rssi(interface):    # ie, 'wlan0'
     proc = subprocess.Popen(
-	["iwlist", interface, "scan"],
+	["/usr/sbin/iwlist", interface, "scan"],
 	stdout=subprocess.PIPE,
 	universal_newlines=True)
     out, err = proc.communicate()
@@ -34,4 +39,5 @@ def get_rssi(interface):    # ie, 'wlan0'
 hostname = socket.gethostname()
 ipaddr = socket.gethostbyname(hostname)
 network = get_rssi('wlan0')
-print("Hostname {0}\nIP {1}\nSSID {2} {3} dB".format(hostname, ipaddr, network[0], network[1]))
+# print("Hostname {0}\nIP {1}\nSSID {2} {3} dB".format(hostname, ipaddr, network[0], network[1]))
+print(f"{now()} {network[1]} db")
