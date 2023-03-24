@@ -104,6 +104,35 @@ icyinfo= ""
 # sudo systemctl stop lightdm
 # sudo systemctl disable lightdm
 
+# disable wifi_powersave
+
+# Edit
+# sudo nano /etc/network/interfaces
+#
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Include files from /etc/network/interfaces.d:
+# source /etc/network/interfaces.d/*
+# allow-hotplug wlan0
+# iface wlan0 inet manual
+# post-up iw wlan0 set power_save off
+
+# check that wifi_powersave is really off
+# iw wlan0 get power_save
+# should report: "Power save: off"
+
+# see https://domoticproject.com/extending-life-raspberry-pi-sd-card/
+#
+# setup /tmp as a RAM disk
+#
+# sudo nano /etc/fstab
+# add a line
+# tmpfs /tmp tmpfs defaults,size=50M 0 0
+
+# disable and check swap
+# sudo swapoff --all
+# Confirm that no swap exists by checking that the Swap line of the following command is 0:
+# sudo free -h
+
 import mpv
 
 # we import this big thing - the hyphenation library - at the latest moment, after playing
@@ -230,7 +259,7 @@ except IOError:
 def get_networkinfo(interface="wlan0"):
 
     proc = subprocess.Popen(
-	["iwlist", interface, "scan"],
+	["/usr/sbin/iwlist", interface, "scan"],
 	stdout=subprocess.PIPE,
 	universal_newlines=True)
     out, err = proc.communicate()
