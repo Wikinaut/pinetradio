@@ -173,6 +173,18 @@ icyinfo= ""
 # sudo systemctl stop cups
 # sudo systemctl disable cups
 
+
+# optional:
+#
+# crontab -e
+#   * * * * * /home/pi/network.py >> /tmp/wifi.log
+#
+# sudo crontab -e
+#   NOW=date +%Y%m%d-%H%M%S
+#   */15 * * * * /usr/local/bin/wifi_reconnect.sh
+#   @reboot echo "`$NOW` -- boot --" > /var/log/wifi_reconnect
+
+
 import mpv
 
 # we import this big thing - the hyphenation library - at the latest moment, after playing
