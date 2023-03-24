@@ -1069,10 +1069,13 @@ if __name__ == '__main__':
 		'keep_open' : 'no',
 		'idle' : 'yes',
 		'gapless_audio' : 'yes',
-		'audio_buffer' : '0.2'
+		'audio_buffer' : '0.2',
+		'stream_lavf_o' : 'reconnect_streamed=1'
 	}
 
 	player = mpv.MPV( **options )
+	player.audio_buffer = 3.0
+
 	soundplayer = mpv.MPV( **options )
 
 	servicebell()
