@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import mpv
 import signal
 import time
@@ -35,13 +37,13 @@ player.observe_property('metadata', make_observer('player'))
 player2 = mpv.MPV( **options )
 
 # Play a stream from the internet (SomaFm Groove Salad)
-player.volume=10.0
+player.volume=60.0
 player.play('http://ice1.somafm.com/groovesalad-128-mp3')
 
 time.sleep(5)
 
 # Play a sound file from the local filesystem
-player2.volume=20.0
+player2.volume=60.0
 player2.play('/home/pi/beep.wav')
 
 signal.pause()
