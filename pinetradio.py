@@ -9,14 +9,15 @@
 
 
 networkadapter="wlan0"
-ambience="/home/pi/sounds/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
-minimal1="/home/pi/sounds/minimal/Simeon ten Holt ‎- Canto Ostinato (1979) - Original 1984 Live Recording.mp3"
-minimal2="/home/pi/sounds/minimal/Arvo Pärt - Für Alina (1976).mp3"
 
-gongsound1 = "/home/pi/Glockenturm1.wav"
-gongsoundlast = "/home/pi/GlockenturmLast.wav"
-beepsound = "/home/pi/beep.wav"
-servicebellsound = "/home/pi/service-bell-receptionsklingel.wav"
+ambience="/home/pi/jukebox/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
+minimal1="/home/pi/jukebox/minimal/Simeon ten Holt ‎- Canto Ostinato (1979) - Original 1984 Live Recording.mp3"
+minimal2="/home/pi/jukebox/minimal/Arvo Pärt - Für Alina (1976).mp3"
+
+beepsound = "/home/pi/sounds/beep.wav"
+servicebellsound = "/home/pi/sounds/service-bell-receptionsklingel.wav"
+gongsound1 = "/home/pi/sounds/Glockenturm1.wav"
+gongsoundlast = "/home/pi/sounds/GlockenturmLast.wav"
 
 
 STATIONS = [
@@ -82,17 +83,82 @@ icyinfo= ""
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s1
 # speaker-test -Dplughw:CARD=sndrpihifiberry,DEV=0 -c2 -s2
 
-# sudo apt install mpv libmpv-dev python3-mpv libasound2-plugin-equal
-# apt remove pulseaudio vlc chromium-browser
-# pip install pyphen
+# for PI OS LITE (32 bit) install:
+#
+#
 
 # we need ntp for exact time on the raspi
-# sudo apt install ntp
+#
+# sudo apt install git ntp libi2c-dev
+# sudo raspi-config
+#   Interface Options: enable SPI for LCD-display
+#                      enable I2C for DAC
+# sudo reboot now
 
-# edit ~/.asoundrc
+# https://domoticproject.com/extending-life-raspberry-pi-sd-card/
+#
+# setup /tmp as a RAM disk
+#
+# sudo nano /etc/fstab
+#
+#    add a line:
+#    tmpfs /tmp tmpfs defaults,size=50M 0 0
 
-# alsactl kill rescan
+
+# disable swapping and check zero-byte swap file
+#
+# https://community.element14.com/products/raspberry-pi/f/forum/20159/how-do-i-permanently-disable-the-swap-service/151444
+# sudo nano /etc/dphys-swapfile
+# change CONF_SWAPSIZE=0
+#
+# After reboot
+# confirm that no swap exists by checking that the Swap line of the following command is 0:
+# sudo free -h
+
+
+# disable wifi_powersave
+
+# sudo nano /etc/network/interfaces
+#
+#   interfaces(5) file used by ifup(8) and ifdown(8)
+#   Include files from /etc/network/interfaces.d:
+#   source /etc/network/interfaces.d/*
+#   allow-hotplug wlan0
+#   iface wlan0 inet manual
+#   post-up iw wlan0 set power_save off
+
+# check that wifi_powersave is really off
+# iw wlan0 get power_save
+# should report: "Power save: off"
+
+# enable the pirate radio DAC audio output
+# and you can better also disable raspi onboard audio.
+#
+# see https://github.com/pimoroni/pirate-audio
+# see https://shop.pimoroni.com/products/pirate-audio-line-out
+#
+# sudo nano /boot/config.txt
+#   dtoverlay=hifiberry-dac
+#   gpio=25=op,dh
+#   dtparam=audio=off
+
+# sudo apt install mpv libmpv-dev python3-mpv libasound2-plugin-equal
+
+# make sure not to have pulseaudio and vlc and mplayer
+# sudo apt remove pulseaudio vlc mplayer
+
+# pip install pyphen st7789
+
+# use the ~/.asoundrc file
+
+# check:
+#
+# aplay -l
+# aplay -L
 # alsamixer -D equal
+
+# usually not needed:
+# alsactl kill rescan
 
 # List all audiodevices
 # mpv --audio-device=help
@@ -100,40 +166,12 @@ icyinfo= ""
 # Test
 # mpv --audio-device=alsa/plugmixequal http://www.radioeins.de/livemp3 --volume=50 --cache=no
 
+# check not to have any display manager onboad, otherwise stop and disable
 # ps -ef | grep dm
 # sudo systemctl stop lightdm
 # sudo systemctl disable lightdm
-
-# disable wifi_powersave
-
-# Edit
-# sudo nano /etc/network/interfaces
-#
-# interfaces(5) file used by ifup(8) and ifdown(8)
-# Include files from /etc/network/interfaces.d:
-# source /etc/network/interfaces.d/*
-# allow-hotplug wlan0
-# iface wlan0 inet manual
-# post-up iw wlan0 set power_save off
-
-# check that wifi_powersave is really off
-# iw wlan0 get power_save
-# should report: "Power save: off"
-
-# see https://domoticproject.com/extending-life-raspberry-pi-sd-card/
-#
-# setup /tmp as a RAM disk
-#
-# sudo nano /etc/fstab
-# add a line
-# tmpfs /tmp tmpfs defaults,size=50M 0 0
-
-# https://community.element14.com/products/raspberry-pi/f/forum/20159/how-do-i-permanently-disable-the-swap-service/151444
-# disable and check swap
-# sudo nano /etc/dphys-swapfile
-# change CONF_SWAPSIZE=0
-# After reboot confirm that no swap exists by checking that the Swap line of the following command is 0:
-# sudo free -h
+# sudo systemctl stop cups
+# sudo systemctl disable cups
 
 import mpv
 
