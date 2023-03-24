@@ -10,6 +10,18 @@ RaspberryPi Internetradio
   https://github.com/pimoroni/pirate-audio  
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
+  * `sudo raspi-config`: → Interface Options → enable `SPI`for the LCD-display and enable `I2C`for the DAC
+  * `sudo nano /boot/config.txt`:
+    ```
+    dtoverlay=hifiberry-dac
+    gpio=25=op,dh
+    ```
+    The DAC can be configured by adding dtoverlay=hifiberry-dac to the /boot/config.txt file.  
+    There is a DAC enable pin—BCM 25— that must be driven high to enable the DAC. You can do this by adding gpio=25=op,dh to the /boot/config.txt file.  
+    The buttons are active low, and connected to pins BCM 5, 6, 16, and 24.  
+    The display uses SPI, and you'll need to enable SPI through the Raspberry Pi configuration menu.  
+    If you want to use these boards with a Pibow Coupé case (either for the Zero / Zero W or Pi 4), then you'll need to use a booster header to raise it up a little.  
+    https://shop.pimoroni.com/products/pirate-audio-line-out
 * Audio output using `mpv` engine
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
