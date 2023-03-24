@@ -527,10 +527,12 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 def stwrite3(message):
 	global disp,img,stationimg
 
+	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
+
 	stationimg = img.copy()
 	draw = ImageDraw.Draw(stationimg)
 
-	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message, fontsize_min=20, fontsize_max = 70)
+	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message + " (–" + str(-rssi) + " db)", fontsize_min=20, fontsize_max = 70)
 	disp.display(stationimg)
 
 def stationplay(stationurl):
