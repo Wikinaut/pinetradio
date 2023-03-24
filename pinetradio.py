@@ -1076,7 +1076,7 @@ if __name__ == '__main__':
 	}
 
 	player = mpv.MPV( **options )
-	player.audio_buffer = 3.0
+	# player.audio_buffer = 3.0
 
 	soundplayer = mpv.MPV( **options )
 
