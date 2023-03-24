@@ -10,7 +10,6 @@ RaspberryPi Internetradio
   https://github.com/pimoroni/pirate-audio  
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
-  
 * Audio output using `mpv` engine
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
@@ -40,6 +39,8 @@ Example: switch from the currently played first station to a certain second (e.g
 * add a quick `record` function with or without a timeout
 * `record` if certain Icy texts are detected
 * playing randomly selected "Wurfsendungen" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
+* ALSA Equalizer: interface to show and control the equalizer settings
+* add loudness on/off
 
 #### special requirements
 
