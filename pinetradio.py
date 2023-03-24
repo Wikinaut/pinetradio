@@ -128,9 +128,11 @@ icyinfo= ""
 # add a line
 # tmpfs /tmp tmpfs defaults,size=50M 0 0
 
+# https://community.element14.com/products/raspberry-pi/f/forum/20159/how-do-i-permanently-disable-the-swap-service/151444
 # disable and check swap
-# sudo swapoff --all
-# Confirm that no swap exists by checking that the Swap line of the following command is 0:
+# sudo nano /etc/dphys-swapfile
+# change CONF_SWAPSIZE=0
+# After reboot confirm that no swap exists by checking that the Swap line of the following command is 0:
 # sudo free -h
 
 import mpv
