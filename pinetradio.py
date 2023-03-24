@@ -86,6 +86,9 @@ icyinfo= ""
 # apt remove pulseaudio vlc chromium-browser
 # pip install pyphen
 
+# we need ntp for exact time on the raspi
+# sudo apt install ntp
+
 # edit ~/.asoundrc
 
 # alsactl kill rescan
