@@ -15,6 +15,9 @@ RaspberryPi Internetradio
     ```
     dtoverlay=hifiberry-dac
     gpio=25=op,dh
+    # You can also disable onboard audio if you're not going to use it.
+    # This sometimes helps applications find the right audio device without extra prompting:
+    dtparam=audio=off
     ```
     The DAC can be configured by adding dtoverlay=hifiberry-dac to the /boot/config.txt file.  
     There is a DAC enable pin—BCM 25— that must be driven high to enable the DAC. You can do this by adding gpio=25=op,dh to the /boot/config.txt file.  
