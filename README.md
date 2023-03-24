@@ -10,7 +10,6 @@ RaspberryPi Internetradio
   https://github.com/pimoroni/pirate-audio  
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
-  
 * Audio output using `mpv` engine
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
