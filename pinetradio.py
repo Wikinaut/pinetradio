@@ -1117,8 +1117,33 @@ def soundplayer_is_playing():
 def player_is_playing():
 	return not player.core_idle
 
+
+def playnews(newsstationcount=0):
+	global stationcounter
+
+	playstation(newsstationcount, graceful=False)
+
+	# resume playing the previous station (stationcounter)
+	# in n seconds
+	timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, ) )
+	timer_resumeplay.start()
+
+def resumeplay(laststation):
+	playstation(laststation, graceful=False)
+
 def setup_scheduler():
-	from apscheduler.schedulers.background import BackgroundScheduler
+
+	newsstation = 0
+	schedule_playnews = BackgroundScheduler(daemon=True)
+	schedule_playnews.add_job(playnews, 'cron', second=0, minute=0, args=( newsstation, ) )
+
+#	https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
+#	https://apscheduler.readthedocs.io/en/stable/modules/triggers/date.html
+#
+#	Example for a certain time/date
+#	schedule_playnews.add_job(playnews, 'date', run_date=datetime(2023, 03, 25, 20, 0, 0), args=( 0, ) )
+
+	schedule_playnews.start()
 
 	schedule_showtime = BackgroundScheduler(daemon=True)
 	schedule_showtime.add_job(showtime, 'cron', minute="*")
@@ -1170,7 +1195,7 @@ if __name__ == '__main__':
 
 	player.observe_property('metadata', make_observer('player'))
 
-
+	from apscheduler.schedulers.background import BackgroundScheduler
 	setup_scheduler()
 
 	starttime= time.time()
