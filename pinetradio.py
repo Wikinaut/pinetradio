@@ -580,9 +580,11 @@ def writebox(draw, box, text, fontsize_min, fontsize_max):
 	draw.multiline_text((box[0], box[2]), wrappedtext, anchor="ld", font=font, fill="cyan")
 
 def stwrite3(message):
-	global disp,img,stationimg
+	global disp,img,stationimg,logger
 
 	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
+
+	logger.warning(f"{message} ({rssi} db)")
 
 	stationimg = img.copy()
 	draw = ImageDraw.Draw(stationimg)
@@ -608,6 +610,7 @@ def stationplay(stationurl):
 		startvolume = 1.0*volumesteps[vol]
 
 	player.volume = startvolume
+	logger.warning(f"{stationurl}")
 	player.play(stationurl)
 
 
@@ -1125,11 +1128,17 @@ def playnews(newsstationcount=0):
 
 	# resume playing the previous station (stationcounter)
 	# in n seconds
-	timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, ) )
+	timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, newsstationcount ) )
 	timer_resumeplay.start()
 
-def resumeplay(laststation):
-	playstation(laststation, graceful=False)
+def resumeplay(laststation, newsstationcount):
+	global stationcounter
+
+	# switch to the currently selected station
+	# except when the user selected the newsstation when this was played
+	# In this case, a station change is not needed
+	if stationcounter != newsstationcount:
+		playstation(stationcounter, graceful=False)
 
 def setup_scheduler():
 
@@ -1191,6 +1200,10 @@ if __name__ == '__main__':
 	killer = GracefulKiller()
 	kill_processes()
 
+	import logging
+	import mylogger
+	logger = mylogger.setup( "WARNING", "/tmp/pinetradio.log" )
+
 	playstation(stationcounter, graceful=False)
 
 	player.observe_property('metadata', make_observer('player'))
@@ -1199,11 +1212,11 @@ if __name__ == '__main__':
 	setup_scheduler()
 
 	starttime= time.time()
-	print("Import of pyphen started.")
+	logger.info("Import of pyphen started.")
 	import pyphen
 	dict = pyphen.Pyphen(lang='de_DE')
 	deltat= time.time()-starttime
-	print(f"pyphen imported, loading of de_DE took {deltat:.2f} seconds on Raspberry Pi Zero")
+	logger.warning(f"pyphen imported, loading of de_DE took {deltat:.2f} seconds on Raspberry Pi Zero")
 
 	starttime = time.time()
 
