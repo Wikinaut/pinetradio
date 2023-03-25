@@ -4,7 +4,8 @@
 #
 # requires an alsa device with dmix properties
 #
-#      20230318 Version for mpv
+#      20230325 version using apscheduler
+#      20230318 version for mpv
 # init 20230218
 
 
@@ -185,9 +186,10 @@ icyinfo= ""
 
 import mpv
 
-# we import this big thing - the hyphenation library - at the latest moment, after playing
+# we import this big libraries - at the latest moment, after playing
 # lazy loading later
 # import pyphen
+# import apscheduler
 
 import signal
 from threading import Timer, Thread
@@ -199,9 +201,7 @@ import time
 from datetime import datetime
 import subprocess
 import ST7789
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+from PIL import Image, ImageDraw, ImageFont
 import socket
 
 stationcfgfile = "/home/pi/pinetradio.station.cfg"
@@ -213,6 +213,10 @@ volumedecrementbuttonblock = False
 
 global hostname
 hostname = os.uname()[1]
+
+def tick():
+	print('Tick! The time is: %s' % datetime.now())
+
 
 def playsound(volumepercent=100, soundfile=beepsound):
 
@@ -1110,6 +1114,29 @@ def soundplayer_is_playing():
 def player_is_playing():
 	return not player.core_idle
 
+def setup_scheduler():
+	from apscheduler.schedulers.background import BackgroundScheduler
+
+	schedule_showtime = BackgroundScheduler(daemon=True)
+	schedule_showtime.add_job(showtime, 'cron', minute="*")
+	schedule_showtime.start()
+
+	schedule_gong1 = BackgroundScheduler(daemon=True)
+	schedule_gong1.add_job(gong1, 'cron', minute=15)
+	schedule_gong1.start()
+
+	schedule_gong2 = BackgroundScheduler(daemon=True)
+	schedule_gong2.add_job(gong2, 'cron', minute=30)
+	schedule_gong2.start()
+
+	schedule_gong3 = BackgroundScheduler(daemon=True)
+	schedule_gong3.add_job(gong3, 'cron', minute=45)
+	schedule_gong3.start()
+
+	schedule_gong4 = BackgroundScheduler(daemon=True)
+	schedule_gong4.add_job(gong4, 'cron', minute=0)
+	schedule_gong4.start()
+
 
 if __name__ == '__main__':
 
@@ -1138,49 +1165,23 @@ if __name__ == '__main__':
 
 	playstation(stationcounter, graceful=False)
 
+	player.observe_property('metadata', make_observer('player'))
+
+
+	setup_scheduler()
+
 	starttime= time.time()
 	print("Import of pyphen started.")
 	import pyphen
 	dict = pyphen.Pyphen(lang='de_DE')
-
 	deltat= time.time()-starttime
 	print(f"pyphen imported, loading of de_DE took {deltat:.2f} seconds on Raspberry Pi Zero")
-
-	player.observe_property('metadata', make_observer('player'))
-
 
 	starttime = time.time()
 
 	while not killer.killed:
-
 		time.sleep(0.5)
 		# triggerwatchdog()
-
-		it = int( time.time() % showtime_every_n_seconds )
-		if it == 0:
-			showtime()
-
-		# chime every 15 minutes
-		minute = int ( time.time() % 3600 / 60 )
-
-		if minute == 0:
-			gong4()
-			time.sleep(60)
-
-		if minute == 45:
-			gong3()
-			time.sleep(60)
-
-		if minute == 30:
-			gong2()
-			time.sleep(60)
-
-		if minute == 15:
-			gong1()
-			time.sleep(60)
-
-		if killer.killed:
-			break
 
 	print("\nShutdown signal received.")
 	shutdown()
