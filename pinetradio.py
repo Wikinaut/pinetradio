@@ -87,9 +87,7 @@ icyinfo= ""
 #
 #
 
-# we need ntp for exact time on the raspi
-#
-# sudo apt install git ntp libi2c-dev
+# sudo apt install git libi2c-dev
 # sudo raspi-config
 #   Interface Options: enable SPI for LCD-display
 #                      enable I2C for DAC
