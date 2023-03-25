@@ -63,7 +63,10 @@ maxpartialwordlength=8
 global anybuttonpressed
 anybuttonpressed = False
 
-volumesteps = [ 0, 5, 8, 10, 12, 15, 17, 20, 22, 25, 28, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100 ]
+volumesteps = [ 0, 5, 8, 10, 12, 15, 17, 20,
+	22, 25, 28, 30, 35, 40, 45, 50, 55,
+	60, 65, 70, 75, 80, 85, 90, 95, 100 ]
+
 startvolstep = 4
 
 # Code for special operations (pin numbers)
