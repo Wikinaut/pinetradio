@@ -1141,9 +1141,8 @@ def resumeplay(laststation, newsstationcount):
 		playstation(stationcounter, graceful=False)
 
 def setup_scheduler():
-
 	newsstation = 0
-	schedule_playnews = BackgroundScheduler(daemon=True)
+	schedule_playnews = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_playnews.add_job(playnews, 'cron', second=0, minute=0, args=( newsstation, ) )
 
 #	https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
@@ -1154,23 +1153,23 @@ def setup_scheduler():
 
 	schedule_playnews.start()
 
-	schedule_showtime = BackgroundScheduler(daemon=True)
+	schedule_showtime = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_showtime.add_job(showtime, 'cron', minute="*")
 	schedule_showtime.start()
 
-	schedule_gong1 = BackgroundScheduler(daemon=True)
+	schedule_gong1 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong1.add_job(gong1, 'cron', minute=15)
 	schedule_gong1.start()
 
-	schedule_gong2 = BackgroundScheduler(daemon=True)
+	schedule_gong2 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong2.add_job(gong2, 'cron', minute=30)
 	schedule_gong2.start()
 
-	schedule_gong3 = BackgroundScheduler(daemon=True)
+	schedule_gong3 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong3.add_job(gong3, 'cron', minute=45)
 	schedule_gong3.start()
 
-	schedule_gong4 = BackgroundScheduler(daemon=True)
+	schedule_gong4 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong4.add_job(gong4, 'cron', minute=0)
 	schedule_gong4.start()
 
@@ -1208,11 +1207,13 @@ if __name__ == '__main__':
 
 	player.observe_property('metadata', make_observer('player'))
 
+
+	import tzlocal
 	from apscheduler.schedulers.background import BackgroundScheduler
 	setup_scheduler()
 
 	starttime= time.time()
-	logger.info("Import of pyphen started.")
+	logger.warning("Import of pyphen started.")
 	import pyphen
 	dict = pyphen.Pyphen(lang='de_DE')
 	deltat= time.time()-starttime
