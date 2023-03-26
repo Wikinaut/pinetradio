@@ -45,17 +45,17 @@ RaspberryPi Internetradio
 
 #### TODO / Brain storming section
 
-* add two rotary encoders for station / volume control
-* `cronplay`: a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
+- [ ] add two rotary encoders for station / volume control
+- [x] `cronplay` (`autoplay`): a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
 Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station. Enable/disable this function by a special `code`.
-* permanently show current network strength rssi (bar + value)
-* reboot if rssi is too low
-* check whether stream/mpv is still alive; watchdog; restart mpv.play()
-* add a quick `record` function with or without a timeout
-* `record` if certain Icy texts are detected
-* playing randomly selected "Wurfsendungen" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
-* ALSA Equalizer: interface to show and control the equalizer settings
-* add loudness on/off
+- [ ] permanently show current network strength rssi (bar + value)
+- [ ] reboot if rssi is too low
+- [ ] check whether stream/mpv is still alive; watchdog; restart mpv.play()
+- [ ] add a quick `record` function with or without a timeout
+- [ ] `record` if certain Icy texts are detected
+- [ ] playing randomly selected "Wurfsendungen" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
+- [ ] ALSA Equalizer: interface to show and control the equalizer settings
+- [ ] add loudness on/off
 
 #### special requirements
 
