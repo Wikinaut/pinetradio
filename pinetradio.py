@@ -69,9 +69,10 @@ volumesteps = [ 0, 5, 8, 10, 12, 15, 17, 20,
 
 startvolstep = 4
 
-# Code for special operations (pin numbers)
-# for example: showtime
-code5656 = [5,6,5,6]
+# Code for special operations (sequence of pin numbers)
+
+code5656 = [5,6,5,6] # restart WiFi
+
 code5566 = [5,5,6,6]
 code55566 = [5,5,5,6,6]
 code555566 = [5,5,5,5,6,6]
@@ -230,6 +231,9 @@ def playsound(volumepercent=100, soundfile=beepsound):
 	soundplayer.wait_for_playback()
 
 def threadedPlaysoundFunction(volumepercent,soundfile):
+	playsound(volumepercent,soundfile)
+
+def beepwait(volumepercent=100,soundfile=beepsound):
 	playsound(volumepercent,soundfile)
 
 def beep(volumepercent=100,soundfile=beepsound):
@@ -596,7 +600,7 @@ def stationplay(stationurl):
 
 	global stationselecttimer,last_icyinfo
 
-	stwrite3("[ Gönnen Sie sich eine Pause - die  Musiktitel kommen gleich! ]")
+	stwrite3("[ Gönnen Sie sich eine Pause - die Musiktitel kommen gleich! ]")
 	last_icyinfo=""
 
 	try:
@@ -828,9 +832,37 @@ def bptimerhandler(pin):
 	buttonqueue.clear()
 
 def restartWifi():
-  os.system('sudo ifdown --force wlan0')
-  time.sleep(1)
-  os.system('sudo ifup wlan0')
+
+	logger.warning("code5656 detected")
+	soundplayer.wait_for_playback() # wait finishing previous beep
+
+	beepwait()
+
+	logger.warning("pausing player and soundplayer")
+
+	player.mute=True
+	soundplayer.mute=True
+
+	player.pause=True
+	soundplayer.pause=True
+
+	stwrite3("restarting the WiFi")
+	os.system('sudo ifdown --force wlan0')
+
+	time.sleep(1)
+	os.system('sudo ifup wlan0')
+	time.sleep(1)
+
+	logger.warning("un-pausing player and soundplayer")
+
+	player.pause=False
+	soundplayer.pause=False
+
+	player.mute=False
+	soundplayer.mute=False
+
+	beep()
+
 
 def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
@@ -840,8 +872,6 @@ def buttonpressed(pin):
 
 	if seqmatch(code5656,buttonqueue):
 		buttonqueue.clear()
-		beep()
-		stwrite3("restarting the WiFi")
 		restartWifi()
 		return
 
@@ -1044,10 +1074,10 @@ def shutdown():
 	beep3()
 	setbacklight(100)
 
-	img = Image.new('RGB', (disp.width, disp.height), color="red")
+	img = Image.new('RGB', (disp.width, disp.height), color="black")
 	draw = ImageDraw.Draw(img)
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
-	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
+	draw.text( ( 120, 120), "shutdown sequence started…", font=font, fill="white", anchor="mm" )
 	disp.display(img)
 
 	def big(text):
@@ -1178,14 +1208,25 @@ def setup_scheduler():
 
 if __name__ == '__main__':
 
+	# set mpv options to use the *mixing* alsa channel
+
+	# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898575
+	# https://medium.com/intrasonics/robust-continuous-audio-recording-c1948895bb49
+	# https://wiki.ubuntuusers.de/mpv/
+
 	options= {
-		'audio_device' : 'alsa/plugmixequal',
-		'volume_max' : '1000.0',
-		'keep_open' : 'no',
-		'idle' : 'yes',
-		'gapless_audio' : 'yes',
-		'audio_buffer' : '0.2',
-		'stream_lavf_o' : 'reconnect_streamed=1'
+                'audio_device' : 'alsa/plugmixequal',
+                'volume_max' : '1000.0',
+                'keep_open' : 'no',
+                'idle' : 'yes',
+                'gapless_audio' : 'weak',
+                'audio_buffer' : '0.2',
+                'network_timeout' : '60',
+                'stream_lavf_o' : 'reconnect_streamed=1,reconnect_delay_max=300,reconnect_at_eof=1',
+                'cache-secs' : '5',
+                'demuxer_thread' : 'yes',
+                'demuxer_readahead_secs' : '5',
+                'demuxer_max_bytes' : '2MiB'
 	}
 
 	player = mpv.MPV( **options )
@@ -1206,10 +1247,9 @@ if __name__ == '__main__':
 	logger = mylogger.setup( "WARNING", "/tmp/pinetradio.log" )
 
 	playstation(stationcounter, graceful=False)
-
 	player.observe_property('metadata', make_observer('player'))
 
-
+	logger.warning(f"mpv options: {options}")
 	import tzlocal
 	from apscheduler.schedulers.background import BackgroundScheduler
 	setup_scheduler()
