@@ -1124,12 +1124,14 @@ def player_is_playing():
 def playnews(newsstationcount=0):
 	global stationcounter
 
-	playstation(newsstationcount, graceful=False)
+	# only switch to station if not yet playing
+	if newsstationcount != stationcounter:
+		playstation(newsstationcount, graceful=False)
 
-	# resume playing the previous station (stationcounter)
-	# in n seconds
-	timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, newsstationcount ) )
-	timer_resumeplay.start()
+		# resume playing the previous station (stationcounter)
+		# in n seconds
+		timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, newsstationcount ) )
+		timer_resumeplay.start()
 
 def resumeplay(laststation, newsstationcount):
 	global stationcounter
