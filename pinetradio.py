@@ -596,7 +596,7 @@ def stationplay(stationurl):
 
 	global stationselecttimer,last_icyinfo
 
-	stwrite3("[ Gönnen Sie sich eine Pause. Musiktitel kommen bald. ]")
+	stwrite3("[ Gönnen Sie sich eine Pause - die  Musiktitel kommen gleich! ]")
 	last_icyinfo=""
 
 	try:
@@ -827,6 +827,11 @@ def bptimerhandler(pin):
 	anybuttonpressed = False
 	buttonqueue.clear()
 
+def restartWifi():
+  os.system('sudo ifdown --force wlan0')
+  time.sleep(1)
+  os.system('sudo ifup wlan0')
+
 def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
 	anybuttonpressed = True
@@ -835,14 +840,9 @@ def buttonpressed(pin):
 
 	if seqmatch(code5656,buttonqueue):
 		buttonqueue.clear()
-		showtime(timeout=20,force=True)
-		time.sleep(1)
 		beep()
-		time.sleep(0.5)
-		beep()
-		time.sleep(0.5)
-		beep()
-		time.sleep(10)
+		stwrite3("restarting the WiFi")
+		restartWifi()
 		return
 
 	if seqmatch(code555566,buttonqueue):
