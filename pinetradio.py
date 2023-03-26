@@ -596,7 +596,7 @@ def stationplay(stationurl):
 
 	global stationselecttimer,last_icyinfo
 
-	stwrite3("[ einen Moment bitte ]")
+	stwrite3("[ Gönnen Sie sich eine Pause. Musiktitel kommen bald. ]")
 	last_icyinfo=""
 
 	try:
