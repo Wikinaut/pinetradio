@@ -29,19 +29,19 @@ RaspberryPi Internetradio
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
   ` sudo apt install mpv libmpv-dev python3-mpv ` 
-* advanced Icy-Title rendering:  
+- [x] advanced Icy-Title rendering:  
   trying to display the title with maximum font size and [hyphenation in Python](https://github.com/Kozea/Pyphen) on the 240x240 pixel display  
   `pip install pyphen`
-* medium volume-decrement press: mute
-* long volume-decrement press: controlled shutdown
-* time display every minute
-* display of basic network connection info (hostname, IP, SSID, signal strength)
-* key press signalling with beeps
-* `code`: coded key press sequences (à la [port knocking](https://en.wikipedia.org/wiki/Port_knocking)) for example `A, B, A ,B` → can trigger special actions or change certain program settings
-* display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
-* ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
+- [x] medium long (< 3 seconds) volume-decrement-button press → mute
+- [x] long ( > 3 seconds) volume-decrement-button press → controlled shutdown
+- [x] time display every minute
+- [x] display of basic network connection info (hostname, IP, SSID, signal strength)
+- [x] key press signalling with beeps
+- [x] `code`: coded key press sequences (à la [port knocking](https://en.wikipedia.org/wiki/Port_knocking)) for example `A, B, A ,B` → can trigger special actions or change certain program settings
+- [x] display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
+- [x] ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
 `sudo apt install libasound2-plugin-equal`
-* `chime`: 1, 2, 3, 4 beeps at every hourly quarter (using `apscheduler`: `pip install apscheduler`)
+- [x] `chime`: 1, 2, 3, 4 beeps at every hourly quarter (using `apscheduler`: `pip install apscheduler`)
 
 #### TODO / Brain storming section
 
