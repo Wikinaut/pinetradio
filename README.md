@@ -37,7 +37,9 @@ RaspberryPi Internetradio
 - [x] time display every minute
 - [x] display of basic network connection info (hostname, IP, SSID, signal strength)
 - [x] key press signalling with beeps
-- [x] `code`: coded key press sequences (à la [port knocking](https://en.wikipedia.org/wiki/Port_knocking)) for example `A, B, A ,B` → can trigger special actions or change certain program settings
+- [x] `code`: certain hard-coded key press sequences (à la [port knocking](https://en.wikipedia.org/wiki/Port_knocking)) can trigger special actions or change certain program settings.  
+  Example: the key sequence `A B A B` → restarts the WiFi adapter and networking; this takes about 2 seconds.
+- [x] WiFi and networking can be manually restarted by a special key sequence (`code ABAB`)
 - [x] display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
 - [x] ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
 `sudo apt install libasound2-plugin-equal`
