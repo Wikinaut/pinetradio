@@ -117,7 +117,9 @@ icyinfo= ""
 # After reboot
 # confirm that no swap exists by checking that the Swap line of the following command is 0:
 # sudo free -h
-
+#
+# Best practice: disable the system logging
+# sudo systemctl disable rsyslog
 
 # disable wifi_powersave
 
