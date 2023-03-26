@@ -1214,19 +1214,24 @@ if __name__ == '__main__':
 	# https://medium.com/intrasonics/robust-continuous-audio-recording-c1948895bb49
 	# https://wiki.ubuntuusers.de/mpv/
 
+	# Remark:
+	# 'stream_lavf_o' : 'reconnect_streamed=1,reconnect_delay_max=300,reconnect_at_eof=1',
+	# does not work with playlist urls/files such as http://somafm.com/seventies.pls
+
 	options= {
-                'audio_device' : 'alsa/plugmixequal',
-                'volume_max' : '1000.0',
-                'keep_open' : 'no',
-                'idle' : 'yes',
-                'gapless_audio' : 'weak',
-                'audio_buffer' : '0.2',
-                'network_timeout' : '60',
-                'stream_lavf_o' : 'reconnect_streamed=1,reconnect_delay_max=300,reconnect_at_eof=1',
-                'cache-secs' : '5',
-                'demuxer_thread' : 'yes',
-                'demuxer_readahead_secs' : '5',
-                'demuxer_max_bytes' : '2MiB'
+		'audio_device' : 'alsa/plugmixequal',
+		'volume_max' : '1000.0',
+		'keep_open' : 'no',
+		'idle' : 'yes',
+		'gapless_audio' : 'weak',
+		'audio_buffer' : '0.2',
+		'network_timeout' : '60',
+		'stream_lavf_o' : 'reconnect_streamed=1,reconnect_delay_max=300',
+		'cache-secs' : '5',
+		'demuxer_thread' : 'yes',
+		'demuxer_readahead_secs' : '5',
+		'demuxer_max_bytes' : '2MiB',
+		'load_unsafe_playlists' : 'yes'
 	}
 
 	player = mpv.MPV( **options )
