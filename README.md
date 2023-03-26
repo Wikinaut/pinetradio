@@ -47,7 +47,8 @@ RaspberryPi Internetradio
 
 - [ ] add two rotary encoders for station / volume control
 - [x] `cronplay` (`autoplay`): a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
-Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station. Enable/disable this function by a special `code`.
+Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station.
+- [ ] Enable/disable `cronplay` with another special `code`.
 - [ ] permanently show current network strength rssi (bar + value)
 - [ ] reboot if rssi is too low
 - [ ] check whether stream/mpv is still alive; watchdog; restart mpv.play()
