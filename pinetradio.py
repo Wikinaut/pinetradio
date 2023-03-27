@@ -880,6 +880,8 @@ def restartWifi():
 	time.sleep(1)
 
 	os.system('sudo ifup wlan0')
+	# os.system('wpa_cli -i wlan0 reconfigure')
+
 	time.sleep(1)
 
 	# wait for network coming back
