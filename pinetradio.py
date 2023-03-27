@@ -720,7 +720,7 @@ def playstation(stationnr, graceful):
 
     if (graceful):
 
-        stationselecttimer = Timer( graceperiod, stationplay, args=( stationnr ) )
+        stationselecttimer = Timer( graceperiod, stationplay, args=( stationnr, ) )
         stationselecttimer.start()
 
     else:
