@@ -471,6 +471,7 @@ def setupdisplay():
 
 	cleardisplay()
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
+	stwrite3("[ Pinetradio started ]")
 
 def setbacklight(dutycycle):
 	global backlight,display
@@ -692,7 +693,7 @@ def playstation(stationcounter, graceful):
 
     station = STATIONS[stationcounter]
 
-    cleardisplay()
+    # cleardisplay()
     draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
@@ -717,6 +718,7 @@ def playstation(stationcounter, graceful):
     else:
 
         stationplay( station[1] )
+
 
 def updstationcounter(stationcounter):
     f = open( stationcfgfile, "w")
@@ -1093,10 +1095,10 @@ def shutdown():
 	beep3()
 	setbacklight(100)
 
-	img = Image.new('RGB', (disp.width, disp.height), color="black")
+	img = Image.new('RGB', (disp.width, disp.height), color="red")
 	draw = ImageDraw.Draw(img)
 	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
-	draw.text( ( 120, 120), "shutdown sequence started…", font=font, fill="white", anchor="mm" )
+	draw.text( ( 120, 120), "Good\nbye", font=font, fill="white", anchor="mm" )
 	disp.display(img)
 
 	def big(text):
@@ -1223,6 +1225,10 @@ def setup_scheduler():
 
 if __name__ == '__main__':
 
+	import logging
+	import mylogger
+	logger = mylogger.setup( "WARNING", "/tmp/pinetradio.log" )
+
 	# set mpv options to use the *mixing* alsa channel
 
 	# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898575
@@ -1261,10 +1267,6 @@ if __name__ == '__main__':
 
 	killer = GracefulKiller()
 	kill_processes()
-
-	import logging
-	import mylogger
-	logger = mylogger.setup( "WARNING", "/tmp/pinetradio.log" )
 
 	playstation(stationcounter, graceful=False)
 	player.observe_property('metadata', make_observer('player'))
