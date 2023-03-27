@@ -353,14 +353,17 @@ def get_networkinfo(interface="wlan0"):
 			hostname,ipaddr,ssid,rssi = get_networkinfo_raw(interface)
 		except:
 			if not connectionwaslost:
-				logger.warning("reconnecting: waiting for ip")
+				noiptime = time.time()
+				logger.warning("*** reconnecting: waiting for ip")
 				connectionwaslost = True
 			time.sleep(1.0)
 
 	# we only print the regained ip addr when we were disconnected
 	# we do not print the addr in normal program flow
 	if connectionwaslost:
-		logger.warning(f"ip after reconnect: {ipaddr}")
+		deltatime = 1.0 + time.time() - noiptime
+		logger.warning(f"*** without ip: {deltatime:.1f} seconds")
+		logger.warning(f"*** ip after reconnect: {ipaddr}")
 
 	return hostname,ipaddr,ssid,rssi
 
@@ -619,11 +622,16 @@ def stwrite3(message):
 	writebox( draw, ((0, 34, disp.height-1, disp.width-1)), message + " (–" + str(-rssi) + " db)", fontsize_min=20, fontsize_max = 70)
 	disp.display(stationimg)
 
-def stationplay(stationurl):
+def stationplay(stationnr):
 
 	global stationselecttimer
 
 	stwrite3("[ Gönnen Sie sich eine Pause - die Musiktitel kommen gleich! ]")
+
+	station = STATIONS[stationnr]
+
+	stationname =station[0]
+	stationurl = station[1]
 
 	try:
 		stationselecttimer.cancel()
@@ -636,7 +644,7 @@ def stationplay(stationurl):
 		startvolume = 1.0*volumesteps[vol]
 
 	player.volume = startvolume
-	logger.warning(f"{stationurl}")
+	logger.warning(f"playing station #{stationnr} ({stationname}) {stationurl}")
 	player.play(stationurl)
 
 
@@ -688,10 +696,10 @@ def setvol(vol, graceful, show=False):
 		sendvolume( volume )
 
 
-def playstation(stationcounter, graceful):
+def playstation(stationnr, graceful):
     global stationselecttimer,draw,disp,img,stationimg
 
-    station = STATIONS[stationcounter]
+    station = STATIONS[stationnr]
 
     cleardisplay()
     draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
@@ -712,12 +720,12 @@ def playstation(stationcounter, graceful):
 
     if (graceful):
 
-        stationselecttimer = Timer( graceperiod, stationplay, args=( station[1], ) )
+        stationselecttimer = Timer( graceperiod, stationplay, args=( stationnr ) )
         stationselecttimer.start()
 
     else:
 
-        stationplay( station[1] )
+        stationplay( stationnr )
 
 
 def updstationcounter(stationcounter):
@@ -1087,7 +1095,7 @@ def setup_button_handlers():
 
 
 def restartplayer():
-	stationplay(stationurl=STATIONS[stationcounter][1])
+	stationplay( stationcounter )
 
 
 def shutdown():
@@ -1123,8 +1131,12 @@ def shutdown():
 	soundplayer.quit()
 
 	if killer.shutdown:
+		logger.warning("*** sudo shutdown -h now")
 		print("Shutdown")
 		os.system("sudo shutdown -h now")
+	else:
+		logger.warning("*** program gracefully terminated")
+		logger.warning(" ")
 	return
 
 def triggerwatchdog():
@@ -1173,12 +1185,15 @@ def playnews(newsstationcount=0):
 
 	# only switch to station if not yet playing
 	if newsstationcount != stationcounter:
+		logger.warning(f"autoplay; tuning to station #{newsstationcount}")
 		playstation(newsstationcount, graceful=False)
 
 		# resume playing the previous station (stationcounter)
 		# in n seconds
 		timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, newsstationcount ) )
 		timer_resumeplay.start()
+	else:
+		logger.warning(f"autoplay: nothing to do, station #{newsstationcount} is already playing")
 
 def resumeplay(laststation, newsstationcount):
 	global stationcounter
@@ -1186,13 +1201,17 @@ def resumeplay(laststation, newsstationcount):
 	# switch to the currently selected station
 	# except when the user selected the newsstation when this was played
 	# In this case, a station change is not needed
+
 	if stationcounter != newsstationcount:
 		playstation(stationcounter, graceful=False)
+		logger.warning(f"resume from autoplay: tuning back to station #{stationcounter}")
+	else:
+		logger.warning(f"resume from autoplay: nothing to do, station #{stationcounter} is already playing")
 
 def setup_scheduler():
 	newsstation = 0
 	schedule_playnews = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
-	schedule_playnews.add_job(playnews, 'cron', second=0, minute=0, args=( newsstation, ) )
+	schedule_playnews.add_job(playnews, 'cron', minute=25, args=( newsstation, ) )
 
 #	https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
 #	https://apscheduler.readthedocs.io/en/stable/modules/triggers/date.html
@@ -1291,4 +1310,5 @@ if __name__ == '__main__':
 
 	print("\nShutdown signal received.")
 	shutdown()
+
 	print("End of the program. I was killed gracefully :)")
