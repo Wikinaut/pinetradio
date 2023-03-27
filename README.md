@@ -10,6 +10,7 @@ RaspberryPi Internetradio
   https://github.com/pimoroni/pirate-audio  
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
+  * `sudo systemctl disable rsyslog` # disable logging
   * `sudo raspi-config`: → Interface Options → enable `SPI`for the LCD-display and enable `I2C`for the DAC
   * `sudo nano /boot/config.txt`:
     ```
@@ -54,8 +55,8 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] permanently show current network strength rssi (bar + value)
 - [ ] reboot if rssi is too low
 - [ ] check whether stream/mpv is still alive; watchdog; restart mpv.play()
-- [ ] add a quick `record` function with or without a timeout
-- [ ] `record` if certain Icy texts are detected
+- [ ] add a quick `record` function with or without a timeout: basically, it is only adding & removing `player.stream_record="filename"`
+- [ ] `record` if certain Icy texts are detected: basically, it is only adding & removing `player.stream_record="filename"`
 - [ ] playing randomly selected "Wurfsendungen" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
 - [ ] ALSA Equalizer: interface to show and control the equalizer settings
 - [ ] add loudness on/off
