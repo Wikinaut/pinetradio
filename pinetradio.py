@@ -1211,7 +1211,7 @@ def resumeplay(laststation, newsstationcount):
 def setup_scheduler():
 	newsstation = 0
 	schedule_playnews = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
-	schedule_playnews.add_job(playnews, 'cron', minute=25, args=( newsstation, ) )
+	schedule_playnews.add_job(playnews, 'cron', minute=0, args=( newsstation, ) )
 
 #	https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
 #	https://apscheduler.readthedocs.io/en/stable/modules/triggers/date.html
