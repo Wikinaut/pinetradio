@@ -37,7 +37,7 @@ STATIONS = [
 ]
 
 graceperiod = 2.0 # seconds between new station is actually selected
-buttonBacklightTimeout = 20
+buttonBacklightTimeout = 30
 mutedBacklightTimeout = 5
 icyBacklightTimeout = 10
 showtimeTimeout = 5
@@ -76,9 +76,6 @@ code5656 = [5,6,5,6] # restart WiFi
 code5566 = [5,5,6,6]
 code55566 = [5,5,5,6,6]
 code555566 = [5,5,5,5,6,6]
-
-global last_icyinfo
-last_icyinfo = ""
 
 global icyinfo
 icyinfo= ""
@@ -319,7 +316,7 @@ except IOError:
 
 # Get signal strength and basic network adapter parameters
 
-def get_networkinfo(interface="wlan0"):
+def get_networkinfo_raw(interface="wlan0"):
 
     proc = subprocess.Popen(
 	["/usr/sbin/iwlist", interface, "scan"],
@@ -340,9 +337,32 @@ def get_networkinfo(interface="wlan0"):
             ssid = ssid_line[1]
 
         hostname = socket.gethostname()
-        ipaddr= socket.gethostbyname(hostname)
+        ipaddr = socket.gethostbyname(hostname)
 
     return hostname,ipaddr,ssid,rssi
+
+def get_networkinfo(interface="wlan0"):
+
+	ipaddr = None
+	connectionwaslost = False
+
+	while ipaddr is None:
+
+		try:
+			# try to get an ip addr
+			hostname,ipaddr,ssid,rssi = get_networkinfo_raw(interface)
+		except:
+			if not connectionwaslost:
+				logger.warning("reconnecting: waiting for ip")
+				connectionwaslost = True
+			time.sleep(1.0)
+
+	# we only print the regained ip addr when we were disconnected
+	# we do not print the addr in normal program flow
+	if connectionwaslost:
+		logger.warning(f"ip after reconnect: {ipaddr}")
+
+	return hostname,ipaddr,ssid,rssi
 
 
 # https://stackoverflow.com/questions/18499497/how-to-process-sigterm-signal-gracefully
@@ -600,10 +620,9 @@ def stwrite3(message):
 
 def stationplay(stationurl):
 
-	global stationselecttimer,last_icyinfo
+	global stationselecttimer
 
 	stwrite3("[ Gönnen Sie sich eine Pause - die Musiktitel kommen gleich! ]")
-	last_icyinfo=""
 
 	try:
 		stationselecttimer.cancel()
@@ -835,33 +854,32 @@ def bptimerhandler(pin):
 
 def restartWifi():
 
+	retriggerbacklight(dutycycle=100,timeout=120)
+
 	logger.warning("code5656 detected")
 	soundplayer.wait_for_playback() # wait finishing previous beep
 
+	stwrite3("restarting the WiFi")
 	beepwait()
 
-	logger.warning("pausing player and soundplayer")
+	logger.warning("muting player and soundplayer")
 
 	player.mute=True
-	soundplayer.mute=True
 
-	player.pause=True
-	soundplayer.pause=True
-
-	stwrite3("restarting the WiFi")
 	os.system('sudo ifdown --force wlan0')
-
 	time.sleep(1)
+
 	os.system('sudo ifup wlan0')
 	time.sleep(1)
 
-	logger.warning("un-pausing player and soundplayer")
+	# wait for network coming back
+	hostname,ipaddr,ssid,rssi = get_networkinfo()
+	stwrite3(ipaddr)
 
-	player.pause=False
-	soundplayer.pause=False
+	logger.warning("unmuting player and soundplayer")
 
+	restartplayer()
 	player.mute=False
-	soundplayer.mute=False
 
 	beep()
 
@@ -1066,9 +1084,8 @@ def setup_button_handlers():
 	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
 
 
-def restart():
-	if not player.mute:
-		playstation(stationcounter, graceful=False)
+def restartplayer():
+	stationplay(stationurl=STATIONS[stationcounter][1])
 
 
 def shutdown():
@@ -1123,23 +1140,19 @@ def triggerwatchdog():
 
 def make_observer(player_name):
 	def observer(_prop_name, prop_val):
-		global last_icyinfo
 
 		# print(f'{player_name}: {prop_val}')
 
 		try:
 			icyinfo = prop_val['icy-title']
-			# print( now() + " " + icyinfo )
+			# logger.warning(f"icyinfo: {icyinfo}")
 
-			if icyinfo != last_icyinfo:
+			# Test
+			# correct max font_size = 28
+			# icyinfo="Erdbeben-Hilfe mit Hindernissen: Enttäuschung bei Türken und Kurden in Berlin, Luise Sammann"
 
-				# Test
-				# correct max font_size = 28
-				# icyinfo="Erdbeben-Hilfe mit Hindernissen: Enttäuschung bei Türken und Kurden in Berlin, Luise Sammann"
-
-				stwrite3(icyinfo)
-				retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
-				last_icyinfo = icyinfo
+			stwrite3(icyinfo)
+			retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 
 		except:
 			pass
