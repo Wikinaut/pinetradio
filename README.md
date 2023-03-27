@@ -10,6 +10,7 @@ RaspberryPi Internetradio
   https://github.com/pimoroni/pirate-audio  
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
+  * `sudo systemctl disable rsyslog` # disable logging
   * `sudo raspi-config`: → Interface Options → enable `SPI`for the LCD-display and enable `I2C`for the DAC
   * `sudo nano /boot/config.txt`:
     ```
