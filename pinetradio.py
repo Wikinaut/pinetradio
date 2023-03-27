@@ -693,7 +693,7 @@ def playstation(stationcounter, graceful):
 
     station = STATIONS[stationcounter]
 
-    # cleardisplay()
+    cleardisplay()
     draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
