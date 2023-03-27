@@ -1187,7 +1187,7 @@ def playnews(newsstationcount=0):
 
 	# only switch to station if not yet playing
 	if newsstationcount != stationcounter:
-		logger.warning(f"autoplay; tuning to station #{newsstationcount}")
+		logger.warning(f"-- autoplay; tuning to station #{newsstationcount}")
 		playstation(newsstationcount, graceful=False)
 
 		# resume playing the previous station (stationcounter)
@@ -1195,7 +1195,7 @@ def playnews(newsstationcount=0):
 		timer_resumeplay = Timer( 5*60, resumeplay, args=( stationcounter, newsstationcount ) )
 		timer_resumeplay.start()
 	else:
-		logger.warning(f"autoplay: nothing to do, station #{newsstationcount} is already playing")
+		logger.warning(f"-- autoplay: nothing to do, station #{newsstationcount} is already playing")
 
 def resumeplay(laststation, newsstationcount):
 	global stationcounter
@@ -1206,9 +1206,9 @@ def resumeplay(laststation, newsstationcount):
 
 	if stationcounter != newsstationcount:
 		playstation(stationcounter, graceful=False)
-		logger.warning(f"resume from autoplay: tuning back to station #{stationcounter}")
+		logger.warning(f"-- resume from autoplay: tuning back to station #{stationcounter}")
 	else:
-		logger.warning(f"resume from autoplay: nothing to do, station #{stationcounter} is already playing")
+		logger.warning(f"-- resume from autoplay: nothing to do, station #{stationcounter} is already playing")
 
 def setup_scheduler():
 	newsstation = 0
