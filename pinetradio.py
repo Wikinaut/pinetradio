@@ -16,6 +16,8 @@ minimal1="/home/pi/jukebox/minimal/Simeon ten Holt ‎- Canto Ostinato (1979) - 
 minimal2="/home/pi/jukebox/minimal/Arvo Pärt - Für Alina (1976).mp3"
 
 beepsound = "/home/pi/sounds/beep.wav"
+quindar1sound = "/home/pi/sounds/Quindar1.wav"
+quindar2sound = "/home/pi/sounds/Quindar2.wav"
 servicebellsound = "/home/pi/sounds/service-bell-receptionsklingel.wav"
 gongsound1 = "/home/pi/sounds/Glockenturm1.wav"
 gongsoundlast = "/home/pi/sounds/GlockenturmLast.wav"
@@ -236,6 +238,14 @@ def threadedPlaysoundFunction(volumepercent,soundfile):
 
 def beepwait(volumepercent=100,soundfile=beepsound):
 	playsound(volumepercent,soundfile)
+
+def quindar1wait(volumepercent=100,soundfile=quindar1sound):
+	playsound(volumepercent,soundfile)
+	logger.warning("quindar1")
+
+def quindar2wait(volumepercent=100,soundfile=quindar2sound):
+	playsound(volumepercent,soundfile)
+	logger.warning("quindar2")
 
 def beep(volumepercent=100,soundfile=beepsound):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
@@ -908,9 +918,14 @@ def buttonpressed(pin):
 		restartWifi()
 		return
 
-	if seqmatch(code5656,buttonqueue):
+	if seqmatch(code6565,buttonqueue):
+		quindar1wait()
 		buttonqueue.clear()
 		logger.warning("code 5656 detected: restarting player")
+
+		stwrite3("restarting the player")
+		quindar2wait()
+
 		restartplayer()
 		return
 
