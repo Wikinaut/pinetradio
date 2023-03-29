@@ -73,6 +73,8 @@ startvolstep = 4
 
 code5656 = [5,6,5,6] # restart WiFi
 
+code6565 = [6,5,6,5] # restart player
+
 code5566 = [5,5,6,6]
 code55566 = [5,5,5,6,6]
 code555566 = [5,5,5,5,6,6]
@@ -889,7 +891,6 @@ def restartWifi():
 	stwrite3(ipaddr)
 
 	logger.warning("unmuting player and soundplayer")
-
 	restartplayer()
 	player.mute=False
 
@@ -905,6 +906,12 @@ def buttonpressed(pin):
 	if seqmatch(code5656,buttonqueue):
 		buttonqueue.clear()
 		restartWifi()
+		return
+
+	if seqmatch(code5656,buttonqueue):
+		buttonqueue.clear()
+		logger.warning("code 5656 detected: restarting player")
+		restartplayer()
 		return
 
 	if seqmatch(code555566,buttonqueue):
