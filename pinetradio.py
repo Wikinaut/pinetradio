@@ -1188,6 +1188,8 @@ def make_observer(player_name):
 			# Test
 			# correct max font_size = 28
 			# icyinfo="Erdbeben-Hilfe mit Hindernissen: Enttäuschung bei Türken und Kurden in Berlin, Luise Sammann"
+			# The optimum font size determination fails for:
+			# icyinfo="Brahms, Fiala und Dvorak mit dem Tschechischen Philharmonischen Chor Brno, R. Kruzik/Martinu-Philharmonie/Fialova/Sibera/Barak"
 
 			stwrite3(icyinfo)
 			retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
