@@ -60,6 +60,8 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] playing randomly selected "Wurfsendungen" (Kurzhörspiele; short audio drama) at random times or as a random play list continuously.
 - [ ] ALSA Equalizer: interface to show and control the equalizer settings
 - [ ] add loudness on/off
+- [ ] alarm clock function with sound and/or internet radio stream, increasing volume
+- [ ] controlling the onboard ACT LED for signalling purposes
 
 #### special requirements
 
