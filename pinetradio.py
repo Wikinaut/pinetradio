@@ -409,11 +409,16 @@ PIN = {
 	'Y': 24
 }
 
+# Activity LED on Raspberry Pi Zero is BCM pin 47
+ACT = 47
+
 global buttonqueue
 buttonqueue = []
 
 # Set up RPi.GPIO with the "BCM" numbering scheme
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
+GPIO.setup(ACT, GPIO.OUT, initial=GPIO.HIGH) # switch ACT LED off (High = LED off)
 
 # Buttons connect to ground when pressed, so we should set them up
 # with a "PULL UP", which weakly pulls the input signal to 3.3V.
@@ -1119,6 +1124,8 @@ def setup_button_handlers():
 
 
 def restartplayer():
+	logger.warning(" ")
+	logger.warning("*** restarting player")
 	stationplay( stationcounter )
 
 
@@ -1234,6 +1241,16 @@ def resumeplay(laststation, newsstationcount):
 	else:
 		logger.warning(f"-- resume from autoplay: nothing to do, station #{stationcounter} is already playing")
 
+def mutecheck():
+	if player.mute:
+		blinkled()
+
+def blinkled():
+	GPIO.output(ACT, False) # on
+	time.sleep(0.05)
+	GPIO.output(ACT, True) # off
+
+
 def setup_scheduler():
 	newsstation = 0
 	schedule_playnews = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
@@ -1248,7 +1265,11 @@ def setup_scheduler():
 	schedule_playnews.start()
 
 	schedule_showtime = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
-	schedule_showtime.add_job(showtime, 'cron', minute="*")
+	schedule_showtime.add_job(mutecheck, 'cron', second="*/5")
+	schedule_showtime.start()
+
+	schedule_showtime = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
+	schedule_showtime.add_job(blinkled, 'cron', minute="*")
 	schedule_showtime.start()
 
 	schedule_gong1 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
@@ -1267,7 +1288,6 @@ def setup_scheduler():
 	schedule_gong4.add_job(gong4, 'cron', minute=0)
 	schedule_gong4.start()
 
-
 if __name__ == '__main__':
 
 	import logging
@@ -1284,7 +1304,7 @@ if __name__ == '__main__':
 	# 'stream_lavf_o' : 'reconnect_streamed=1,reconnect_delay_max=300,reconnect_at_eof=1',
 	# does not work with playlist urls/files such as http://somafm.com/seventies.pls
 
-	options= {
+	options1= {
 		'audio_device' : 'alsa/plugmixequal',
 		'volume_max' : '1000.0',
 		'keep_open' : 'no',
@@ -1300,10 +1320,43 @@ if __name__ == '__main__':
 		'load_unsafe_playlists' : 'yes'
 	}
 
-	player = mpv.MPV( **options )
+	player = mpv.MPV( **options1 )
 	# player.audio_buffer = 3.0
 
-	soundplayer = mpv.MPV( **options )
+# loss-of-stream:
+# Vermutlich bekommst du in diesem Fall ein "MpvEventEndFile"
+# mit gesetzem "Error"-Feld:
+# https://github.com/jaseg/python-mpv/blob/main/mpv.py#L443
+#
+# Teste das doch mal mit einem Event-Callback, das einfach die Events logged, z.B.:
+# ... und schaue, was das auf der Konsole ausgibt.
+
+	@player.event_callback('end-file')
+	def print_event(evt):
+
+		# Event: {'event_id': 7, 'error': 0, 'reply_userdata': 0, 'event': {'reason': 2, 'error': 0}}
+		if (evt['event']['reason'] != 2) or (evt['event']['error'] != 0):
+			logger.warning(f"*** Event: {evt}")
+
+		# restartplayer()
+
+# Falls du später nicht mit Callbacks arbeiten möchtest,
+# kannst du auch synchron auf so ein Event warten:
+# player.wait_for_event('end-file', cond=lambda evt: evt.reason == MpvEventEndFile.ERROR)
+
+	options2= {
+		'audio_device' : 'alsa/plugmixequal',
+		'volume_max' : '1000.0',
+		'keep_open' : 'no',
+		'idle' : 'yes',
+		'gapless_audio' : 'no',
+		'audio_buffer' : '0.0',
+		'cache' : 'no',
+		'demuxer_thread' : 'no'
+	}
+
+
+	soundplayer = mpv.MPV( **options2 )
 
 	servicebell()
 
@@ -1314,9 +1367,12 @@ if __name__ == '__main__':
 	kill_processes()
 
 	playstation(stationcounter, graceful=False)
-	player.observe_property('metadata', make_observer('player'))
 
-	logger.warning(f"mpv options: {options}")
+	player.observe_property('metadata', make_observer('player'))
+	# remark: player.metadata would get the metadata upon request
+
+	logger.warning(f"mpv streamplayer options1: {options1}")
+	logger.warning(f"mpv soundplayer options2: {options2}")
 	import tzlocal
 	from apscheduler.schedulers.background import BackgroundScheduler
 	setup_scheduler()

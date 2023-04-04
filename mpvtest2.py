@@ -45,22 +45,34 @@ options= {
 player = mpv.MPV( **options )
 player.observe_property('metadata', make_observer('player'))
 
-# define a second player
-player2 = mpv.MPV( **options )
-
 # Play a stream from the internet (SomaFm Groove Salad)
 player.volume=60.0
 
 # player.play('http://somafm.com/seventies.pls')
 player.play('http://ice1.somafm.com/groovesalad-128-mp3')
 
-time.sleep(5)
 
-# Play a sound file from the local filesystem
-player2.volume=60.0
-player2.play('/home/pi/sounds/beep.wav')
+# loss-of-stream:
+# Vermutlich bekommst du in diesem Fall ein "MpvEventEndFile"
+# mit gesetzem "Error"-Feld:
+# https://github.com/jaseg/python-mpv/blob/main/mpv.py#L443
+#
+# Teste das doch mal mit einem Event-Callback, das einfach die Events logged, z.B.:
+# ... und schaue, was das auf der Konsole ausgibt.
 
-# print("start recording")
-# player.stream_record="/tmp/audio.mp3"
+@player.event_callback('end-file')
+def print_event(evt):
+    print(evt)
 
-signal.pause()
+
+# Falls du später nicht mit Callbacks arbeiten möchtest,
+# kannst du auch synchron auf so ein Event warten:
+# player.wait_for_event('end-file', cond=lambda evt: evt.reason == MpvEventEndFile.ERROR)
+
+while True:
+	md=player.metadata
+	if md is not None:
+		print(md)
+	time.sleep(1)
+
+# signal.pause()
