@@ -29,12 +29,12 @@ STATIONS = [
 	[ "Kulturradio", "http://kulturradio.de/live.m3u" ],
 	[ "Radio Eins", "http://www.radioeins.de/livemp3" ],
 	[ "WDR 5", "http://wdr-wdr5-live.icecast.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3" ],
-	[ "Ellinikos 93,2", "http://netradio.live24.gr/orange9320" ],
 	[ "JazzRadio Berlin", "http://streaming.radio.co/s774887f7b/listen" ],
 	[ "WDR Cosmo", "http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3" ],
-	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
+	[ "Ellinikos 93,2", "http://netradio.live24.gr/orange9320" ],
 	[ "Left Coast", "http://somafm.com/seventies.pls" ],
 	[ "Groove Salad", "http://ice1.somafm.com/groovesalad-128-mp3" ],
+	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
 	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
 ]
 
@@ -700,8 +700,7 @@ def setvol(vol, graceful, show=False):
 	try:
 		volumetimer.cancel()
 
-	except NameError:
-
+	except:
 		pass
 
 	if (graceful):
@@ -731,8 +730,7 @@ def playstation(stationnr, graceful):
 
     try:
         stationselecttimer.cancel()
-
-    except NameError:
+    except:
         pass
 
     if (graceful):
