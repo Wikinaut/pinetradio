@@ -45,6 +45,7 @@ RaspberryPi Internetradio
 - [x] ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
 `sudo apt install libasound2-plugin-equal`
 - [x] `chime`: 1, 2, 3, 4 beeps at every hourly quarter (using `apscheduler`: `pip install apscheduler`)
+- [x] Activity (ACT) LED indicates "on" (1x flash) or "muted" (2x flash ) every 5 seconds
 
 #### TODO / Brain storming section
 
@@ -61,7 +62,7 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] ALSA Equalizer: interface to show and control the equalizer settings
 - [ ] add loudness on/off
 - [ ] alarm clock function with sound and/or internet radio stream, increasing volume
-- [ ] controlling the onboard ACT LED for signalling purposes
+- [x] controlling the onboard ACT LED for signalling purposes
 
 #### special requirements
 
