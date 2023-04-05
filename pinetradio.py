@@ -1241,12 +1241,16 @@ def resumeplay(laststation, newsstationcount):
 
 def mutecheck():
 	if player.mute:
-		blinkled()
+		blinkled(2)
+	else:
+		blinkled(1)
 
-def blinkled():
-	GPIO.output(ACT, False) # on
-	time.sleep(0.05)
-	GPIO.output(ACT, True) # off
+def blinkled(n=1):
+	for i in range(n):
+		GPIO.output(ACT, False) # on
+		time.sleep(0.03)
+		GPIO.output(ACT, True) # off
+		time.sleep(0.3)
 
 
 def setup_scheduler():
