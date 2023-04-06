@@ -633,6 +633,9 @@ def stwrite3(message):
 
 	logger.warning(f"{message} ({rssi} db)")
 
+	if player.mute:
+		return
+
 	stationimg = img.copy()
 	draw = ImageDraw.Draw(stationimg)
 
@@ -1196,8 +1199,8 @@ def make_observer(player_name):
 			# The optimum font size determination fails for:
 			# icyinfo="Brahms, Fiala und Dvorak mit dem Tschechischen Philharmonischen Chor Brno, R. Kruzik/Martinu-Philharmonie/Fialova/Sibera/Barak"
 
+			stwrite3(icyinfo)
 			if not player.mute:
-				stwrite3(icyinfo)
 				retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 
 		except:
