@@ -74,7 +74,6 @@ startvolstep = 4
 # Code for special operations (sequence of pin numbers)
 
 code5656 = [5,6,5,6] # restart WiFi
-
 code6565 = [6,5,6,5] # restart player
 
 code5566 = [5,5,6,6]
@@ -210,20 +209,19 @@ import subprocess
 import ST7789
 from PIL import Image, ImageDraw, ImageFont
 import socket
+import json
 
-stationcfgfile = "/home/pi/pinetradio.station.cfg"
-volumecfgfile = "/home/pi/pinetradio.volume.cfg"
+cfgfile ="/home/pi/pinetradio.cfg"
 
 global stationcounter
+global volstep
+global muted
+
 global volumedecrementbuttonblock
 volumedecrementbuttonblock = False
 
 global hostname
 hostname = os.uname()[1]
-
-def tick():
-	print('Tick! The time is: %s' % datetime.now())
-
 
 def playsound(volumepercent=100, soundfile=beepsound):
 
@@ -309,22 +307,28 @@ def get_git_revision_short_hash() -> str:
 global githash
 githash = get_git_revision_short_hash()
 
+
+global cfgdata
+
 try:
-	with open( stationcfgfile, "r") as f:
-		stationcounter = int(f.read())
+	with open( cfgfile, "r") as f:
+		cfgdata = json.load(f)
+		stationcounter=cfgdata['station']
+		volstep=cfgdata['volstep']
+		muted=cfgdata['muted']
 		f.close()
 
 except IOError:
-	stationcounter = 0
 
-try:
-	with open( volumecfgfile, "r") as f:
-		vol = int(f.read())
-		f.close()
+	stationcounter=0
+	volstep=startvolstep
+	muted=False
 
-except IOError:
-	vol = startvolstep
-
+	cfgdata = {
+		'station': stationcounter,
+		'volstep' : startvolstep,
+		'muted': muted
+	}
 
 # Get signal strength and basic network adapter parameters
 
@@ -462,7 +466,7 @@ def cleardisplay():
 
 def showvolume(draw,volcolor="red",restcolor="yellow"):
 	total = len(volumesteps)-1
-	length = disp.height*(total-vol) // total
+	length = disp.height*(total-volstep) // total
 	draw.line( (disp.width-1,disp.height-1,disp.width-1,length), fill=volcolor )
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill=restcolor )
 
@@ -658,10 +662,10 @@ def stationplay(stationnr):
 	except:
 		pass
 
-	if player.mute:
+	if muted:
 		startvolume = 0
 	else:
-		startvolume = 1.0*volumesteps[vol]
+		startvolume = 1.0*volumesteps[volstep]
 
 	player.volume = startvolume
 	logger.warning(f"playing station #{stationnr} ({stationname}) {stationurl}")
@@ -689,7 +693,7 @@ def handle_button(pin):
 def sendvolume(volume):
 	player.volume = 1.0*volume
 
-def setvol(vol, graceful, show=False):
+def setvol(volstep, graceful, show=False):
 	global volumetimer,disp,img,stationimg,volimg
 
 	volimg = stationimg.copy()
@@ -698,7 +702,7 @@ def setvol(vol, graceful, show=False):
 	if show:
 		disp.display(volimg)
 
-	volume = volumesteps[vol]
+	volume = volumesteps[volstep]
 
 	try:
 		volumetimer.cancel()
@@ -747,9 +751,28 @@ def playstation(stationnr, graceful):
 
 
 def updstationcounter(stationcounter):
-    f = open( stationcfgfile, "w")
-    f.write(str(stationcounter))
-    f.close()
+	global cfgdata
+
+	cfgdata['station']=stationcounter
+	with open(cfgfile, "w") as outfile:
+		json.dump(cfgdata, outfile, indent=4)
+
+def updmuted():
+	global cfgdata,muted
+
+	muted=player.mute
+	cfgdata['muted']=muted
+	logger.warning(f"muted: {muted}")
+	with open(cfgfile, "w") as outfile:
+		json.dump(cfgdata, outfile, indent=4)
+
+def updvol(volstep):
+	global cfgdata
+
+	cfgdata['volstep']=volstep
+	with open(cfgfile, "w") as outfile:
+		json.dump(cfgdata, outfile, indent=4)
+
 
 def handle_radiobutton(pin):
     global stationcounter
@@ -784,9 +807,11 @@ def handle_stationincrement_button(pin):
 
 	buttonpressed(pin)
 
-	if player.mute:
+	if muted:
 		player.mute = False
-		setvol(vol, graceful=False, show=True)
+		updmuted()
+
+		setvol(volstep, graceful=False, show=True)
 
 	if triggerdisplay():
 		return
@@ -801,9 +826,11 @@ def handle_stationdecrement_button(pin):
 
 	buttonpressed(pin)
 
-	if player.mute:
+	if muted:
 		player.mute = False
-		setvol(vol, graceful=False, show=True)
+		updmuted()
+
+		setvol(volstep, graceful=False, show=True)
 
 	if triggerdisplay():
 		return
@@ -860,10 +887,6 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 		showtimetimer = Timer( timeout+1.0, showcurrentimg, args=() )
 		showtimetimer.start()
 
-def savevol(vol):
-	f = open( volumecfgfile, "w")
-	f.write(str(vol))
-	f.close()
 
 def seqmatch(needle,haystack):
 
@@ -909,6 +932,7 @@ def restartWifi():
 	logger.warning("unmuting player and soundplayer")
 	restartplayer()
 	player.mute=False
+	updmuted()
 
 	beep()
 
@@ -972,13 +996,14 @@ def buttonpressed(pin):
 	bptimer.start()
 
 def handle_volumeincrement_button(pin):
-	global vol
+	global volstep
 
 	buttonpressed(pin)
 
-	if player.mute:
+	if muted:
 		player.mute = False
-		setvol(vol, graceful=False, show=True)
+		updmuted()
+		setvol(volstep, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
 			return
@@ -986,10 +1011,10 @@ def handle_volumeincrement_button(pin):
 			triggerdisplay()
 			return
 
-	if vol < len(volumesteps)-1:
-		vol += 1
-		savevol(vol)
-		setvol(vol, graceful=False, show=True)
+	if volstep < len(volumesteps)-1:
+		volstep += 1
+		updvol(volstep)
+		setvol(volstep, graceful=False, show=True)
 
 def gracetimer():
 	global volumedecrementbuttonblock
@@ -1006,7 +1031,7 @@ def blockvolumedecrementbutton():
 		grace.start()
 
 def handle_volumedecrement_button(pin):
-	global vol,grace,volumedecrementbuttonblock
+	global volstep,grace,volumedecrementbuttonblock
 
 	buttonpressed(pin)
 
@@ -1016,9 +1041,10 @@ def handle_volumedecrement_button(pin):
 
 	display_was_on = display_is_on()
 
-	if player.mute:
+	if muted:
 		player.mute = False
-		setvol(vol, graceful=False, show=True)
+		updmuted()
+		setvol(volatep, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
 			return
@@ -1034,9 +1060,10 @@ def handle_volumedecrement_button(pin):
 
 	if time.time()-starttime >= 1:
 
-		if player.mute:
+		if muted:
 
 			player.mute = False
+			updmuted()
 
 			triggerdisplay()
 			if not volumebutton_after_mute_direct:
@@ -1045,11 +1072,13 @@ def handle_volumedecrement_button(pin):
 		else:
 
 			player.mute = True
+			updmuted()
 
 			img = Image.new('RGB', (disp.width, disp.height), color="blue")
 			draw = ImageDraw.Draw(img)
 
 			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+
 			draw.text( ( 120, 80),
 				"muted", font=font, fill="white", anchor="mm" )
 
@@ -1083,10 +1112,10 @@ def handle_volumedecrement_button(pin):
 	else:
 		triggerdisplay()
 
-		if vol > 0:
-			vol -= 1
-			savevol(vol)
-			setvol(vol, graceful=False, show=True)
+		if volstep > 0:
+			volstep -= 1
+			updvol(volstep)
+			setvol(volstep, graceful=False, show=True)
 
 
 def setup_button_handlers():
@@ -1246,7 +1275,7 @@ def resumeplay(laststation, newsstationcount):
 		logger.warning(f"-- resume from autoplay: nothing to do, station #{stationcounter} is already playing")
 
 def mutecheck():
-	if player.mute:
+	if muted:
 		blinkled(2)
 	else:
 		blinkled(1)
