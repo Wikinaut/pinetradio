@@ -1353,7 +1353,7 @@ if __name__ == '__main__':
 	options2= {
 		'audio_device' : 'alsa/plugmixequal',
 		'volume_max' : '1000.0',
-		'keep_open' : 'no',
+		'keep_open' : 'yes',
 		'idle' : 'yes',
 		'gapless_audio' : 'no',
 		'audio_buffer' : '0.0',
