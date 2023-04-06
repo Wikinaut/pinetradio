@@ -915,9 +915,11 @@ def restartWifi():
 
 def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
+
+	beep(volumepercent=50)
+	blinkled(1)
 	anybuttonpressed = True
 	buttonqueue.append(pin)
-	beep(volumepercent=50)
 
 	if seqmatch(code5656,buttonqueue):
 		buttonqueue.clear()
@@ -1249,12 +1251,16 @@ def mutecheck():
 	else:
 		blinkled(1)
 
-def blinkled(n=1):
+def threadedBlinkledFunction(n=1):
 	for i in range(n):
 		GPIO.output(ACT, False) # on
 		time.sleep(0.03)
 		GPIO.output(ACT, True) # off
 		time.sleep(0.3)
+
+def blinkled(n=1):
+	t = Thread( target=threadedBlinkledFunction, daemon=True, args=( n, ) )
+	t.start()
 
 
 def setup_scheduler():
@@ -1353,7 +1359,7 @@ if __name__ == '__main__':
 	options2= {
 		'audio_device' : 'alsa/plugmixequal',
 		'volume_max' : '1000.0',
-		'keep_open' : 'yes',
+		'keep_open' : 'no',
 		'idle' : 'yes',
 		'gapless_audio' : 'no',
 		'audio_buffer' : '0.0',
