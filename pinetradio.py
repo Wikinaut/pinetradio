@@ -1196,8 +1196,9 @@ def make_observer(player_name):
 			# The optimum font size determination fails for:
 			# icyinfo="Brahms, Fiala und Dvorak mit dem Tschechischen Philharmonischen Chor Brno, R. Kruzik/Martinu-Philharmonie/Fialova/Sibera/Barak"
 
-			stwrite3(icyinfo)
-			retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
+			if not player.mute:
+				stwrite3(icyinfo)
+				retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 
 		except:
 			pass
