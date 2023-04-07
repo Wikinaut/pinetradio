@@ -254,6 +254,8 @@ def servicebell(volumepercent=25,soundfile=servicebellsound):
 	t.start()
 
 def gong1Function(volumepercent):
+	if muted:
+		return
 	playsound(volumepercent,gongsoundlast)
 
 def gong1(volumepercent=70,soundfile=gongsound1):
@@ -261,6 +263,8 @@ def gong1(volumepercent=70,soundfile=gongsound1):
 	t.start()
 
 def gong2Function(volumepercent):
+	if muted:
+		return
 	playsound(volumepercent,gongsound1)
 	playsound(volumepercent,gongsoundlast)
 
@@ -269,6 +273,8 @@ def gong2(volumepercent=70,soundfile=gongsound1):
 	t.start()
 
 def gong3Function(volumepercent):
+	if muted:
+		return
 	playsound(volumepercent,gongsound1)
 	playsound(volumepercent,gongsound1)
 	playsound(volumepercent,gongsoundlast)
@@ -278,6 +284,8 @@ def gong3(volumepercent=70,soundfile=gongsound1):
 	t.start()
 
 def gong4Function(volumepercent):
+	if muted:
+		return
 	playsound(volumepercent,gongsound1)
 	playsound(volumepercent,gongsound1)
 	playsound(volumepercent,gongsound1)
