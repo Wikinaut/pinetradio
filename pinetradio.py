@@ -803,7 +803,7 @@ def handle_radiobutton1(pin):
 def triggerdisplay(timeout=None):
 
 	if timeout is None:
-		if player.mute:
+		if muted:
 			timeout = mutedBacklightTimeout
 		else:
 			timeout = buttonBacklightTimeout
@@ -818,7 +818,7 @@ def handle_stationincrement_button(pin):
 	if muted:
 		player.mute = False
 		updmuted()
-
+		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
 	if triggerdisplay():
@@ -837,7 +837,7 @@ def handle_stationdecrement_button(pin):
 	if muted:
 		player.mute = False
 		updmuted()
-
+		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
 	if triggerdisplay():
@@ -944,6 +944,10 @@ def restartWifi():
 
 	beep()
 
+def showicytitle():
+	md = player.metadata
+	if md is not None and 'icy-title' in md:
+		stwrite3(md['icy-title'])
 
 def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
@@ -1011,6 +1015,7 @@ def handle_volumeincrement_button(pin):
 	if muted:
 		player.mute = False
 		updmuted()
+		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
@@ -1052,6 +1057,7 @@ def handle_volumedecrement_button(pin):
 	if muted:
 		player.mute = False
 		updmuted()
+		showicytitle()
 		setvol(volatep, graceful=False, show=True)
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
@@ -1072,7 +1078,7 @@ def handle_volumedecrement_button(pin):
 
 			player.mute = False
 			updmuted()
-
+			showicytitle()
 			triggerdisplay()
 			if not volumebutton_after_mute_direct:
 				return
