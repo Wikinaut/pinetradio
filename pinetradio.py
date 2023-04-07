@@ -18,6 +18,8 @@ minimal2="/home/pi/jukebox/minimal/Arvo Pärt - Für Alina (1976).mp3"
 beepsound = "/home/pi/sounds/beep.wav"
 quindar1sound = "/home/pi/sounds/Quindar1.wav"
 quindar2sound = "/home/pi/sounds/Quindar2.wav"
+quindar1soundshort = "/home/pi/sounds/Quindar1short.wav"
+quindar2soundshort = "/home/pi/sounds/Quindar2short.wav"
 servicebellsound = "/home/pi/sounds/service-bell-receptionsklingel.wav"
 gongsound1 = "/home/pi/sounds/Glockenturm1.wav"
 gongsoundlast = "/home/pi/sounds/GlockenturmLast.wav"
@@ -239,11 +241,11 @@ def beepwait(volumepercent=100,soundfile=beepsound):
 
 def quindar1wait(volumepercent=100,soundfile=quindar1sound):
 	playsound(volumepercent,soundfile)
-	logger.warning("quindar1")
+	logger.warning("quindar1wait")
 
 def quindar2wait(volumepercent=100,soundfile=quindar2sound):
 	playsound(volumepercent,soundfile)
-	logger.warning("quindar2")
+	logger.warning("quindar2wait")
 
 def beep(volumepercent=100,soundfile=beepsound):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
@@ -252,6 +254,10 @@ def beep(volumepercent=100,soundfile=beepsound):
 def servicebell(volumepercent=25,soundfile=servicebellsound):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
+
+def servicebellwait(volumepercent=100,soundfile=servicebellsound):
+	playsound(volumepercent,soundfile)
+	logger.warning("servicebellwait")
 
 def gong1Function(volumepercent):
 	if muted:
@@ -1102,7 +1108,8 @@ def handle_volumedecrement_button(pin):
 
 			disp.display(img)
 
-			beep3()
+			# beep3()
+			servicebellwait(100)
 
 			triggerdisplay(timeout=10)
 
@@ -1177,6 +1184,7 @@ def restartplayer():
 
 def shutdown():
 
+	servicebellwait(100)
 	beep3()
 	setbacklight(100)
 
