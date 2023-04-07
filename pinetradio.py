@@ -645,7 +645,7 @@ def stwrite3(message):
 
 	logger.warning(f"{message} ({rssi} db)")
 
-	if player.mute:
+	if muted:
 		return
 
 	stationimg = img.copy()
@@ -1239,7 +1239,7 @@ def make_observer(player_name):
 			# icyinfo="Brahms, Fiala und Dvorak mit dem Tschechischen Philharmonischen Chor Brno, R. Kruzik/Martinu-Philharmonie/Fialova/Sibera/Barak"
 
 			stwrite3(icyinfo)
-			if not player.mute:
+			if not muted:
 				retriggerbacklight(dutycycle=100,timeout=icyBacklightTimeout)
 
 		except:
