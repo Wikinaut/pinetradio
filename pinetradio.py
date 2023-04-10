@@ -820,6 +820,7 @@ def handle_stationincrement_button(pin):
 	global stationcounter
 
 	buttonpressed(pin)
+	displaywasoff = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -827,7 +828,7 @@ def handle_stationincrement_button(pin):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if triggerdisplay():
+	if displaywasoff:
 		return
 
 	stationcounter = (stationcounter+1) % len(STATIONS)
@@ -839,6 +840,7 @@ def handle_stationdecrement_button(pin):
 	global stationcounter
 
 	buttonpressed(pin)
+	displaywasoff = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -846,7 +848,7 @@ def handle_stationdecrement_button(pin):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if triggerdisplay():
+	if displaywasoff:
 		return
 
 	stationcounter = (stationcounter-1) % len(STATIONS)
@@ -1017,6 +1019,7 @@ def handle_volumeincrement_button(pin):
 	global volstep
 
 	buttonpressed(pin)
+	displaywason = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -1026,8 +1029,7 @@ def handle_volumeincrement_button(pin):
 		triggerdisplay()
 		if not volumebutton_after_mute_direct:
 			return
-	elif not display_is_on():
-			triggerdisplay()
+	elif displaywason:
 			return
 
 	if volstep < len(volumesteps)-1:
@@ -1050,7 +1052,7 @@ def blockvolumedecrementbutton():
 		grace.start()
 
 def handle_volumedecrement_button(pin):
-	global volstep,grace,volumedecrementbuttonblock
+	global volstep,grace,volumedecrementbuttonblock,buttonqueue
 
 	buttonpressed(pin)
 
@@ -1058,7 +1060,7 @@ def handle_volumedecrement_button(pin):
 		return
 	blockvolumedecrementbutton()
 
-	display_was_on = display_is_on()
+	displaywason = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -1108,9 +1110,7 @@ def handle_volumedecrement_button(pin):
 
 			disp.display(img)
 
-			# beep3()
 			servicebellwait(100)
-
 			triggerdisplay(timeout=10)
 
 			while GPIO.input(pin) == 0 and time.time()-starttime < 5:
@@ -1128,6 +1128,7 @@ def handle_volumedecrement_button(pin):
 
 				time.sleep(10-time.time()+starttime)
 				showtime(timeout=10,force=True)
+				buttonqueue.clear()
 				return
 
 	else:
