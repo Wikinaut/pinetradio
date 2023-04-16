@@ -7,11 +7,14 @@ RaspberryPi Internetradio
   https://www.berrybase.de/pirate-audio-hat-fuer-raspberry-pi-line-out
   * Software:  
   `sudo apt install python3-rpi.gpio python3-spidev python3-pip python3-pil python3-numpy`  
+  `sudo apt install pigpio python3-pigpio`  
   https://github.com/pimoroni/pirate-audio  
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
   * `sudo systemctl disable rsyslog` # disable logging
-  * `sudo raspi-config`: → Interface Options → enable `SPI`for the LCD-display and enable `I2C`for the DAC
+  * `sudo systemctl enable pigpiod`
+  * `sudo systemctl start pigpiod`
+  * `sudo raspi-config`: → Interface Options → enable `SPI` for the LCD-display and enable `I2C` for the DAC
   * `sudo nano /boot/config.txt`:
     ```
     dtoverlay=hifiberry-dac
