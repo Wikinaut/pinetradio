@@ -1338,15 +1338,15 @@ def setup_scheduler():
 
 	schedule_gong1 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong1.add_job(gong1, 'cron', minute=15)
-	schedule_gong1.start()
+#	schedule_gong1.start()
 
 	schedule_gong2 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong2.add_job(gong2, 'cron', minute=30)
-	schedule_gong2.start()
+#	schedule_gong2.start()
 
 	schedule_gong3 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong3.add_job(gong3, 'cron', minute=45)
-	schedule_gong3.start()
+#	schedule_gong3.start()
 
 	schedule_gong4 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong4.add_job(gong4, 'cron', minute=0)
@@ -1374,7 +1374,8 @@ if __name__ == '__main__':
 		'keep_open' : 'no',
 		'idle' : 'yes',
 		'gapless_audio' : 'weak',
-		'audio_buffer' : '0.2',
+#		'audio_buffer' : '0.2',
+		'audio_buffer' : '1.0',
 		'network_timeout' : '60',
 		'stream_lavf_o' : 'reconnect_streamed=1,reconnect_delay_max=300',
 		'cache-secs' : '5',
