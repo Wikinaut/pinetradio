@@ -12,8 +12,8 @@ RaspberryPi Internetradio
   ST7789 display driver https://github.com/pimoroni/st7789-python  
   `pip install st7789`
   * `sudo systemctl disable rsyslog` # disable logging
-  * `sudo systemctl enable pigpiod`
-  * `sudo systemctl start pigpiod`
+  * `sudo systemctl enable pigpiod` # make sure to have `pigpiod -t 0` in /lib/systemd/system/pigpiod.service
+  * `sudo systemctl start pigpiod` # make sure to have `pigpiod -t 0` in /lib/systemd/system/pigpiod.service
   * `sudo raspi-config`: → Interface Options → enable `SPI` for the LCD-display and enable `I2C` for the DAC
   * `sudo nano /boot/config.txt`:
     ```

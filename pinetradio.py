@@ -490,24 +490,15 @@ def showvolume(draw,volcolor="red",restcolor="yellow"):
 	draw.line( (disp.width-1,length-1,disp.width-1,0), fill=restcolor )
 
 def setupdisplay():
-	global disp,img,draw,backlight,display
-
-	# Initialize display.
-	# disp.begin()
-
-	# GPIO.setmode(GPIO.BCM)
+	global disp,img,draw,display
 
 	# We must set the backlight pin up as an output first
-	# GPIO.setup(13, GPIO.OUT)
 	pi.set_mode(13, pigpio.OUTPUT)
 
-	# Set up our pin as a PWM output at 500Hz
-	# backlight = GPIO.PWM(13, 100)
-	pi.set_PWM_frequency(13,8000)
+	# Set up our pin as a PWM output at 1000Hz
+	pi.set_PWM_frequency(13, 1000)
 	display = 100
 
-	# Start the PWM at 100% duty cycle
-	# backlight.start(100)
 	triggerdisplay()
 
 	cleardisplay()
