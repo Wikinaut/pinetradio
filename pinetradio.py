@@ -201,7 +201,7 @@ import mpv
 
 import signal
 from threading import Timer, Thread
-import RPi.GPIO as GPIO
+import pigpio
 import sys
 import os
 import re
@@ -433,14 +433,19 @@ ACT = 47
 global buttonqueue
 buttonqueue = []
 
-# Set up RPi.GPIO with the "BCM" numbering scheme
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(ACT, GPIO.OUT, initial=GPIO.HIGH) # switch ACT LED off (High = LED off)
+# GPIO.setwarnings(False)
+# GPIO.setmode(GPIO.BCM)
+
+pi = pigpio.pi()       # pi accesses the local Pi's GPIO
+steady = 5000 # microseconds
+
+# GPIO.setup(ACT, GPIO.OUT, initial=GPIO.HIGH) # switch ACT LED off (High = LED off)
+pi.write(ACT, 1)
+pi.set_mode(ACT, pigpio.OUTPUT)
 
 # Buttons connect to ground when pressed, so we should set them up
 # with a "PULL UP", which weakly pulls the input signal to 3.3V.
-GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Create ST7789 LCD display class for square LCD
 # Standard display setup for Pirate Audio, except we omit the backlight pin
@@ -490,31 +495,29 @@ def setupdisplay():
 	# Initialize display.
 	# disp.begin()
 
-	GPIO.setmode(GPIO.BCM)
+	# GPIO.setmode(GPIO.BCM)
 
 	# We must set the backlight pin up as an output first
-	GPIO.setup(13, GPIO.OUT)
+	# GPIO.setup(13, GPIO.OUT)
+	pi.set_mode(13, pigpio.OUTPUT)
 
 	# Set up our pin as a PWM output at 500Hz
-	backlight = GPIO.PWM(13, 100)
+	# backlight = GPIO.PWM(13, 100)
+	pi.set_PWM_frequency(13,8000)
 	display = 100
 
 	# Start the PWM at 100% duty cycle
 	# backlight.start(100)
 	triggerdisplay()
 
-	# brightness = 50
-	# backlight.ChangeDutyCycle(brightness)
-	# backlight.stop()
-
 	cleardisplay()
 	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 	stwrite3("[ Pinetradio started ]")
 
 def setbacklight(dutycycle):
-	global backlight,display
+	global display
 	display=dutycycle
-	backlight.ChangeDutyCycle(dutycycle)
+	pi.set_PWM_dutycycle(13, dutycycle*255/100)
 
 def display_is_on():
 	global display
@@ -532,7 +535,7 @@ def retriggerbacklight(dutycycle=100,timeout=buttonBacklightTimeout):
 	except:
 		is_backlightOn = True
 
-	backlight.start(dutycycle)
+	pi.set_PWM_dutycycle(13, dutycycle*255/100)
 	display = dutycycle
 	backlighttimer = Timer( timeout, setbacklight, args=( 0, ) )
 	backlighttimer.start()
@@ -816,7 +819,7 @@ def triggerdisplay(timeout=None):
 
 	return not retriggerbacklight(dutycycle=100,timeout=timeout)
 
-def handle_stationincrement_button(pin):
+def handle_stationincrement_button(pin, level, tick):
 	global stationcounter
 
 	buttonpressed(pin)
@@ -836,7 +839,7 @@ def handle_stationincrement_button(pin):
 	playstation(stationcounter, graceful=True)
 
 
-def handle_stationdecrement_button(pin):
+def handle_stationdecrement_button(pin, level, tick):
 	global stationcounter
 
 	buttonpressed(pin)
@@ -1015,7 +1018,7 @@ def buttonpressed(pin):
 	bptimer = Timer( 90, bptimerhandler, args = (pin, ) )
 	bptimer.start()
 
-def handle_volumeincrement_button(pin):
+def handle_volumeincrement_button(pin, level, tick):
 	global volstep
 
 	buttonpressed(pin)
@@ -1051,7 +1054,7 @@ def blockvolumedecrementbutton():
 		grace = Timer( 0.3, gracetimer, args = () )
 		grace.start()
 
-def handle_volumedecrement_button(pin):
+def handle_volumedecrement_button(pin, level, tick):
 	global volstep,grace,volumedecrementbuttonblock,buttonqueue
 
 	buttonpressed(pin)
@@ -1077,7 +1080,7 @@ def handle_volumedecrement_button(pin):
 #		time.sleep(0.2)
 
 	time.sleep(0.2) # debounce
-	while GPIO.input(pin) == 0 and time.time()-starttime < 1:
+	while pi.read(pin) == 0 and time.time()-starttime < 1:
 		time.sleep(0.2)
 
 	if time.time()-starttime >= 1:
@@ -1113,7 +1116,7 @@ def handle_volumedecrement_button(pin):
 			servicebellwait(100)
 			triggerdisplay(timeout=10)
 
-			while GPIO.input(pin) == 0 and time.time()-starttime < 5:
+			while pi.read(pin) == 0 and time.time()-starttime < 5:
 				time.sleep(0.2)
 
 			if time.time()-starttime > 5:
@@ -1139,8 +1142,16 @@ def handle_volumedecrement_button(pin):
 			updvol(volstep)
 			setvol(volstep, graceful=False, show=True)
 
+def cb(gpio, level, tick):
+	print(gpio, level, tick)
+	for i in range(100):
+		print(pi.read(gpio),end="")
+		sleep(0.001)
+	print()
+
 
 def setup_button_handlers():
+
 	# Loop through out buttons and attach the "handle_button" function to each
 	# We're watching the "FALLING" edge (transition from 3.3V to Ground) and
 	# picking a generous bouncetime of 100ms to smooth out button presses.
@@ -1148,33 +1159,15 @@ def setup_button_handlers():
 	# for pin in BUTTONS:
 	#    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
 
-	try:
-		GPIO.remove_event( PIN['Y'] )
-	except:
-		pass
+	for pin in BUTTONS:
+		pi.set_pull_up_down(pin, pigpio.PUD_UP)
+		pi.set_mode(pin, pigpio.INPUT)
+		pi.set_glitch_filter(pin, steady)
 
-	GPIO.add_event_detect( PIN['Y'], GPIO.FALLING, handle_stationincrement_button, bouncetime=250)
-
-	try:
-		GPIO.remove_event( PIN['X'] )
-	except:
-		pass
-
-	GPIO.add_event_detect( PIN['X'], GPIO.FALLING, handle_stationdecrement_button, bouncetime=250)
-
-	try:
-		GPIO.remove_event( PIN['B'] )
-	except:
-		pass
-
-	GPIO.add_event_detect( PIN['B'], GPIO.FALLING, handle_volumeincrement_button, bouncetime=250)
-
-	try:
-		GPIO.remove_event( PIN['A'] )
-	except:
-		pass
-
-	GPIO.add_event_detect( PIN['A'], GPIO.FALLING, handle_volumedecrement_button, bouncetime=250)
+	pi.callback( PIN['Y'], pigpio.FALLING_EDGE, handle_stationincrement_button)
+	pi.callback( PIN['X'], pigpio.FALLING_EDGE, handle_stationdecrement_button)
+	pi.callback( PIN['B'], pigpio.FALLING_EDGE, handle_volumeincrement_button)
+	pi.callback( PIN['A'], pigpio.FALLING_EDGE, handle_volumedecrement_button)
 
 
 def restartplayer():
@@ -1209,7 +1202,6 @@ def shutdown():
 	big("1")
 	big("0")
 	setbacklight(0)
-	backlight.stop()
 	cleardisplay()
 	disp.display(img)
 
@@ -1305,9 +1297,9 @@ def mutecheck():
 
 def threadedBlinkledFunction(n=1):
 	for i in range(n):
-		GPIO.output(ACT, False) # on
+		pi.write(ACT, 0) # on
 		time.sleep(0.03)
-		GPIO.output(ACT, True) # off
+		pi.write(ACT, 1) # off
 		time.sleep(0.3)
 
 def blinkled(n=1):
