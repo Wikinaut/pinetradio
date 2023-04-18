@@ -3,7 +3,10 @@
 # pinetradio tiny internet radio with Raspberry Zero WH and Pirate-Audio HAT
 #
 # requires an alsa device with dmix properties
+# because we need to play a stream and additional signals like beeps
 #
+#
+#      20230416 version using pigpio
 #      20230325 version using apscheduler
 #      20230318 version for mpv
 # init 20230218
@@ -344,6 +347,74 @@ except IOError:
 		'muted': muted
 	}
 
+
+steady = 20000 # microseconds
+
+pressed = pigpio.LOW
+released = pigpio.HIGH
+
+class TwoButtons():
+
+	def __init__(self,button1,button2,callback1,callback2,callback12):
+
+		# get a pigpio instance
+		self.pi = pigpio.pi()
+
+		# set up buttons
+		self.button1 = button1
+		self.button2 = button2
+
+		# set up glitch filter to debounce each switch
+		self.pi.set_glitch_filter(self.button1, steady)
+		self.pi.set_glitch_filter(self.button2, steady)
+
+		# set up each button as an input
+		self.pi.set_mode(self.button1, pigpio.INPUT)
+		self.pi.set_mode(self.button2, pigpio.INPUT)
+
+		# create a callback for when button is pressed
+		self.pi.callback(self.button1, pigpio.EITHER_EDGE, self.button_pressed)
+		self.pi.callback(self.button2, pigpio.EITHER_EDGE, self.button_pressed)
+
+		self.callback1 = callback1
+		self.callback2 = callback2
+		self.callback12 = callback12
+
+
+	# common button press callback for both buttons
+	def button_pressed(self, pin, level, tick):
+
+		both = False
+
+		if pin == self.button1:
+
+			if level == pressed:
+
+				for _ in range(10):
+					if self.pi.read(self.button2) == pressed:
+						both = True
+						break
+					time.sleep(0.005)
+
+				if not both and self.pi.read(self.button1) == pressed:
+					self.callback1(pin,level,tick)
+
+		elif pin == self.button2:
+
+			if level == pressed:
+
+				for _ in range(10):
+					if self.pi.read(self.button1) == pressed:
+						both = True
+						break
+					time.sleep(0.005)
+
+				if not both and self.pi.read(self.button2) == pressed:
+					self.callback2(pin,level,tick)
+
+			if both:
+				self.callback12(912,level,tick)
+
 # Get signal strength and basic network adapter parameters
 
 def get_networkinfo_raw(interface="wlan0"):
@@ -433,19 +504,13 @@ ACT = 47
 global buttonqueue
 buttonqueue = []
 
-# GPIO.setwarnings(False)
-# GPIO.setmode(GPIO.BCM)
-
 pi = pigpio.pi()       # pi accesses the local Pi's GPIO
-steady = 5000 # microseconds
 
-# GPIO.setup(ACT, GPIO.OUT, initial=GPIO.HIGH) # switch ACT LED off (High = LED off)
 pi.write(ACT, 1)
 pi.set_mode(ACT, pigpio.OUTPUT)
 
 # Buttons connect to ground when pressed, so we should set them up
 # with a "PULL UP", which weakly pulls the input signal to 3.3V.
-# GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Create ST7789 LCD display class for square LCD
 # Standard display setup for Pirate Audio, except we omit the backlight pin
@@ -951,6 +1016,17 @@ def showicytitle():
 	if md is not None and 'icy-title' in md:
 		stwrite3(md['icy-title'])
 
+def special_restartplayer(pin=None,level=None,tick=None):
+	quindar1wait()
+	buttonqueue.clear()
+	logger.warning("code 5656 detected: restarting player")
+
+	stwrite3("restarting the player")
+	quindar2wait()
+
+	restartplayer()
+
+
 def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
 
@@ -965,14 +1041,7 @@ def buttonpressed(pin):
 		return
 
 	if seqmatch(code6565,buttonqueue):
-		quindar1wait()
-		buttonqueue.clear()
-		logger.warning("code 5656 detected: restarting player")
-
-		stwrite3("restarting the player")
-		quindar2wait()
-
-		restartplayer()
+		special_restartplayer()
 		return
 
 	if seqmatch(code555566,buttonqueue):
@@ -1147,18 +1216,22 @@ def setup_button_handlers():
 	# We're watching the "FALLING" edge (transition from 3.3V to Ground) and
 	# picking a generous bouncetime of 100ms to smooth out button presses.
 
-	# for pin in BUTTONS:
-	#    GPIO.add_event_detect(pin, GPIO.FALLING, handle_radiobutton, bouncetime=250)
-
 	for pin in BUTTONS:
 		pi.set_pull_up_down(pin, pigpio.PUD_UP)
 		pi.set_mode(pin, pigpio.INPUT)
 		pi.set_glitch_filter(pin, steady)
 
 	pi.callback( PIN['Y'], pigpio.FALLING_EDGE, handle_stationincrement_button)
-	pi.callback( PIN['X'], pigpio.FALLING_EDGE, handle_stationdecrement_button)
+	# pi.callback( PIN['X'], pigpio.FALLING_EDGE, handle_stationdecrement_button)
 	pi.callback( PIN['B'], pigpio.FALLING_EDGE, handle_volumeincrement_button)
-	pi.callback( PIN['A'], pigpio.FALLING_EDGE, handle_volumedecrement_button)
+	# pi.callback( PIN['A'], pigpio.FALLING_EDGE, handle_volumedecrement_button)
+
+	TwoButtons(
+		PIN['X'], PIN['A'],
+		handle_stationdecrement_button,
+		handle_volumedecrement_button,
+		special_restartplayer
+	)
 
 
 def restartplayer():
