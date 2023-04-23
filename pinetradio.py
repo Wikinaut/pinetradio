@@ -1014,7 +1014,22 @@ def restartWifi():
 def showicytitle():
 	md = player.metadata
 	if md is not None and 'icy-title' in md:
+
 		stwrite3(md['icy-title'])
+
+def special_teetimer(pin=None,level=None,tick=None):
+	quindar1wait()
+	buttonqueue.clear()
+	logger.warning("Teetimer started")
+
+	stwrite3("starting Teetimer 2:30")
+	playsound(volumepercent=100, soundfile="/home/sound/teetimer-2min30.mp3")
+
+	quindar2wait()
+
+	teetimer = Timer( 180, gong4 )
+	teetimer.start()
+
 
 def special_restartplayer(pin=None,level=None,tick=None):
 	quindar1wait()
@@ -1221,9 +1236,9 @@ def setup_button_handlers():
 		pi.set_mode(pin, pigpio.INPUT)
 		pi.set_glitch_filter(pin, steady)
 
-	pi.callback( PIN['Y'], pigpio.FALLING_EDGE, handle_stationincrement_button)
+	# pi.callback( PIN['Y'], pigpio.FALLING_EDGE, handle_stationincrement_button)
 	# pi.callback( PIN['X'], pigpio.FALLING_EDGE, handle_stationdecrement_button)
-	pi.callback( PIN['B'], pigpio.FALLING_EDGE, handle_volumeincrement_button)
+	# pi.callback( PIN['B'], pigpio.FALLING_EDGE, handle_volumeincrement_button)
 	# pi.callback( PIN['A'], pigpio.FALLING_EDGE, handle_volumedecrement_button)
 
 	TwoButtons(
@@ -1231,6 +1246,13 @@ def setup_button_handlers():
 		handle_stationdecrement_button,
 		handle_volumedecrement_button,
 		special_restartplayer
+	)
+
+	TwoButtons(
+		PIN['Y'], PIN['B'],
+		handle_stationincrement_button,
+		handle_volumeincrement_button,
+		special_teetimer
 	)
 
 
