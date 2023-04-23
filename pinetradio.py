@@ -1023,7 +1023,7 @@ def special_teetimer(pin=None,level=None,tick=None):
 	logger.warning("Teetimer started")
 
 	stwrite3("starting Teetimer 2:30")
-	playsound(volumepercent=100, soundfile="/home/sound/teetimer-2min30.mp3")
+	playsound(volumepercent=100, soundfile="/home/pi/sounds/teetimer-2min30.wav")
 
 	quindar2wait()
 
