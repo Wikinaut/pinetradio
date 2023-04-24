@@ -1023,11 +1023,15 @@ def special_teetimer(pin=None,level=None,tick=None):
 	logger.warning("Teetimer started")
 
 	stwrite3("starting Teetimer 2:30")
-	playsound(volumepercent=100, soundfile="/home/pi/sounds/teetimer-2min30.wav")
+
+	lastvol=player.volume
+	player.volume=0.5*lastvol
+	playsound(volumepercent=200, soundfile="/home/pi/sounds/teetimer-2min30.wav")
+	player.volume=lastvol
 
 	quindar2wait()
 
-	teetimer = Timer( 180, gong4 )
+	teetimer = Timer( 180, servicebell )
 	teetimer.start()
 
 
@@ -1188,7 +1192,7 @@ def handle_volumedecrement_button(pin, level, tick):
 
 			disp.display(img)
 
-			servicebellwait(100)
+			servicebell(100)
 			triggerdisplay(timeout=10)
 
 			while pi.read(pin) == 0 and time.time()-starttime < 5:
