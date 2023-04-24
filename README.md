@@ -65,8 +65,8 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] ALSA Equalizer: interface to show and control the equalizer settings
 - [ ] add loudness on/off
 - [ ] alarm clock function with sound and/or internet radio stream, increasing volume
-- [ ] "kitchen" timer function (a few set of preprogrammed countdown timers for green tea etc.)
-- [ ] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
+- [x] "kitchen" timer function (a few set of preprogrammed countdown timers for green tea etc.)
+- [x] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
 - [x] controlling the onboard ACT LED for signalling purposes
 
 #### special requirements
