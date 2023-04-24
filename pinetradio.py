@@ -254,6 +254,14 @@ def beep(volumepercent=100,soundfile=beepsound):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
 
+def quindar1(volumepercent=100,soundfile=quindar1soundshort):
+	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
+	t.start()
+
+def quindar2(volumepercent=100,soundfile=quindar2soundshort):
+	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
+	t.start()
+
 def servicebell(volumepercent=25,soundfile=servicebellsound):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
@@ -1017,31 +1025,46 @@ def showicytitle():
 
 		stwrite3(md['icy-title'])
 
-def special_teetimer(pin=None,level=None,tick=None):
+def teatimerready():
 	quindar1wait()
-	buttonqueue.clear()
-	logger.warning("Teetimer started")
-
-	stwrite3("starting Teetimer 2:30")
+	logger.warning("Teatimer has expired")
+	stwrite3("Teatimer 2:30 has expired")
+	triggerdisplay()
 
 	lastvol=player.volume
 	player.volume=0.5*lastvol
-	playsound(volumepercent=200, soundfile="/home/pi/sounds/teetimer-2min30.wav")
+	servicebellwait(volumepercent=200)
+	servicebellwait(volumepercent=200)
+	servicebellwait(volumepercent=200)
+	playsound(volumepercent=200, soundfile="/home/pi/sounds/teetimer-abgelaufen.mp3")
 	player.volume=lastvol
+	quindar2()
 
-	quindar2wait()
+def special_teatimer(pin=None,level=None,tick=None):
+	quindar1()
+	buttonqueue.clear()
 
-	teetimer = Timer( 180, servicebell )
-	teetimer.start()
+	teatimer = Timer( 180, teatimerready )
+	teatimer.start()
+
+	logger.warning("Teatimer started")
+	stwrite3("Starting Teatimer 2:30")
+	triggerdisplay()
+
+	lastvol=player.volume
+	player.volume=0.5*lastvol
+	playsound(volumepercent=200, soundfile="/home/pi/sounds/teetimer-2min30.mp3")
+	player.volume=lastvol
+	quindar2()
 
 
 def special_restartplayer(pin=None,level=None,tick=None):
-	quindar1wait()
+	quindar1()
 	buttonqueue.clear()
 	logger.warning("code 5656 detected: restarting player")
 
 	stwrite3("restarting the player")
-	quindar2wait()
+	quindar2()
 
 	restartplayer()
 
@@ -1256,7 +1279,7 @@ def setup_button_handlers():
 		PIN['Y'], PIN['B'],
 		handle_stationincrement_button,
 		handle_volumeincrement_button,
-		special_teetimer
+		special_teatimer
 	)
 
 
