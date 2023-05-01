@@ -228,6 +228,10 @@ volumedecrementbuttonblock = False
 global hostname
 hostname = os.uname()[1]
 
+stationfont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+font20 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
+font46 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+
 def playsound(volumepercent=100, soundfile=beepsound):
 
 	nowtime=timenow()
@@ -729,8 +733,9 @@ def stwrite3(message):
 
 def stationplay(stationnr):
 
-	global stationselecttimer
+	global stationselecttimer,draw
 
+	draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
 	stwrite3("[ Gönnen Sie sich eine Pause - die Musiktitel kommen gleich! ]")
 
 	station = STATIONS[stationnr]
@@ -751,6 +756,7 @@ def stationplay(stationnr):
 	player.volume = startvolume
 	logger.warning(f"playing station #{stationnr} ({stationname}) {stationurl}")
 	player.play(stationurl)
+	showvolume(draw)
 
 
 def kill_processes():
@@ -800,20 +806,18 @@ def setvol(volstep, graceful, show=False):
 		sendvolume( volume )
 
 
-def playstation(stationnr, graceful):
-    global stationselecttimer,draw,disp,img,stationimg
+def playstation(stationnr, graceful=True):
+    global stationselecttimer,draw,disp,img
 
+    graceful = True
     station = STATIONS[stationnr]
 
     cleardisplay()
-    draw.rectangle( ((0, 0, disp.height-1, disp.width-1)), outline="yellow")
+    draw.rectangle( ((0, 0, disp.width-1, disp.height-1)), outline="yellow")
 
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-    cursor = stwrite( (0,0), "{0}".format( stationcounter+1 ), font, "red" )
-    cursor = stwrite( cursor, " {0}".format( station[0] ), font, "white" )
-
-    stationimg = img.copy()
-    showvolume(draw)
+#    draw.rectangle((1, 1, disp.width-2, 31), fill=(0, 0, 0, 0))
+    cursor = stwrite( (0,0), "{0}".format( stationcounter+1 ), stationfont, "red" )
+    cursor = stwrite( cursor, " {0}".format( station[0] ), stationfont, "white" )
     disp.display(img)
 
     try:
@@ -952,15 +956,13 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
 
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
 	draw.text( ( 120, 70 ),
 		"{0}\n{3}\n{1}\n{2}\n{4}\n{5} dB".
 		format(hostname,githash[0],githash[1],ipaddr,ssid,rssi),
-		font=font, fill="white", anchor="mm" )
+		font=font20, fill="white", anchor="mm" )
 
-	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
 	draw.text( ( 120, 160 ),
-		"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
+		"{0}".format(timenow()), font=font46, fill="white", anchor="mm" )
 	showvolume(draw,"white","black")
 	disp.display(timeimg)
 
