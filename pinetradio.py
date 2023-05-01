@@ -39,6 +39,7 @@ STATIONS = [
 	[ "Ellinikos 93,2", "http://netradio.live24.gr/orange9320" ],
 	[ "Left Coast", "http://somafm.com/seventies.pls" ],
 	[ "Groove Salad", "http://ice1.somafm.com/groovesalad-128-mp3" ],
+	[ "Heavyweight Reggae", "http://somafm.com/reggae.pls" ],
 	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
 	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
 ]
@@ -809,7 +810,11 @@ def setvol(volstep, graceful, show=False):
 def playstation(stationnr, graceful=True):
     global stationselecttimer,draw,disp,img
 
-    graceful = True
+    try:
+        stationselecttimer.cancel()
+    except:
+        pass
+
     station = STATIONS[stationnr]
 
     cleardisplay()
@@ -819,11 +824,6 @@ def playstation(stationnr, graceful=True):
     cursor = stwrite( (0,0), "{0}".format( stationcounter+1 ), stationfont, "red" )
     cursor = stwrite( cursor, " {0}".format( station[0] ), stationfont, "white" )
     disp.display(img)
-
-    try:
-        stationselecttimer.cancel()
-    except:
-        pass
 
     if (graceful):
 
