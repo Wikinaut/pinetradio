@@ -31,7 +31,7 @@ if [[ $uptimeminutes -lt 4 ]]; then
 	exit
 fi
 
-verbose=0
+verbose=1
 if [[ $1 = "-v" ]]; then verbose=1 ;fi
 
 NOW=$(date +%Y%m%d-%H%M%S)

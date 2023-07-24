@@ -71,8 +71,10 @@ def print_event(evt):
 
 while True:
 	md=player.metadata
-	if md is not None:
-		print(md)
+
+	if md is not None and 'icy-title' in md:
+		print(md['icy-title'])
+
 	time.sleep(1)
 
 # signal.pause()

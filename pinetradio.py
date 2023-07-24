@@ -17,6 +17,8 @@ networkadapter="wlan0"
 ambience="/home/pi/jukebox/ambientmixer/Ambientmix Bleiche VBR 80-120kbps.mp3"
 minimal1="/home/pi/jukebox/minimal/Simeon ten Holt ‎- Canto Ostinato (1979) - Original 1984 Live Recording.mp3"
 minimal2="/home/pi/jukebox/minimal/Arvo Pärt - Für Alina (1976).mp3"
+minimal3="/home/pi/jukebox/shepard.mp3"
+minimal4="/home/pi/jukebox/BCC CCC Pausenmucke - Fear of Ghosts - Machine Lullaby.mp3"
 
 beepsound = "/home/pi/sounds/beep.wav"
 quindar1sound = "/home/pi/sounds/Quindar1.wav"
@@ -85,6 +87,8 @@ code6565 = [6,5,6,5] # restart player
 code5566 = [5,5,6,6]
 code55566 = [5,5,5,6,6]
 code555566 = [5,5,5,5,6,6]
+code5555566 = [5,5,5,5,5,6,6]
+code55555566 = [5,5,5,5,5,5,6,6]
 
 global icyinfo
 icyinfo= ""
@@ -527,7 +531,7 @@ pi.set_mode(ACT, pigpio.OUTPUT)
 
 # Create ST7789 LCD display class for square LCD
 # Standard display setup for Pirate Audio, except we omit the backlight pin
-SPI_SPEED_MHZ = 90
+SPI_SPEED_MHZ = 120
 rotation = 270
 
 # regarding backlight pin 13, read:
@@ -1086,6 +1090,22 @@ def buttonpressed(pin):
 
 	if seqmatch(code6565,buttonqueue):
 		special_restartplayer()
+		return
+
+	if seqmatch(code55555566,buttonqueue):
+		buttonqueue.clear()
+		player.play(minimal4)
+		player.loop_file="inf"
+		cleardisplay()
+		stwrite3(minimal4)
+		return
+
+	if seqmatch(code5555566,buttonqueue):
+		buttonqueue.clear()
+		player.play(minimal3)
+		player.loop_file="inf"
+		cleardisplay()
+		stwrite3(minimal3)
 		return
 
 	if seqmatch(code555566,buttonqueue):
