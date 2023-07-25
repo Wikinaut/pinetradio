@@ -82,7 +82,6 @@ ST7789 library
 ![IMG_20230725_140013](https://github.com/Wikinaut/pinetradio/assets/1151915/fdb11677-6a03-4492-b4d7-7b9d8328f64d)
 ![IMG_20230725_135914](https://github.com/Wikinaut/pinetradio/assets/1151915/730eeee9-a4cc-49a8-bcdc-015435f6a621)
 ![IMG_20230725_135825](https://github.com/Wikinaut/pinetradio/assets/1151915/8f711843-cfd5-4fad-94f0-c7d036789f70)
-![IMG_20230725_162818_edit_203241560851799](https://github.com/Wikinaut/pinetradio/assets/1151915/54f533b8-15a6-443f-8d48-9f5d79695d9f)
 
 Example for Soundbox function (play stored sound/s):
 ![IMG_20230725_140200](https://github.com/Wikinaut/pinetradio/assets/1151915/6af0ea34-13c1-4ac0-b091-0662c8553f7e)
@@ -91,4 +90,4 @@ Example for Soundbox function (play stored sound/s):
 ![IMG_20230725_140320_pyxelate](https://github.com/Wikinaut/pinetradio/assets/1151915/3da61a90-ce56-4991-970f-830c2e808682)
 
 It's time to say `goodbye` (shutdown has finished):
-
+![IMG_20230725_162818_edit_203241560851799](https://github.com/Wikinaut/pinetradio/assets/1151915/54f533b8-15a6-443f-8d48-9f5d79695d9f)
