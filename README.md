@@ -32,7 +32,9 @@ RaspberryPi Internetradio
 * Audio output using `mpv` engine
   * libmpv-dev
   * [python3-mpv](https://github.com/jaseg/python-mpv) library wrapper  
-  ` sudo apt install mpv libmpv-dev python3-mpv ` 
+  ` sudo apt install mpv libmpv-dev python3-mpv `
+
+#### Implemented features
 - [x] advanced Icy-Title rendering:  
   trying to display the title with maximum font size and [hyphenation in Python](https://github.com/Kozea/Pyphen) on the 240x240 pixel display  
   `pip install pyphen`
@@ -50,14 +52,17 @@ RaspberryPi Internetradio
 - [x] `chime`: 1, 2, 3, 4 beeps at every hourly quarter (using `apscheduler`: `pip install apscheduler`)
 - [x] Activity (ACT) LED indicates "on" (1x flash) or "muted" (2x flash ) every 5 seconds
 - [X] Soundbox/Sound machine function: play stored sound files 
+- [x] `cronplay` (`autoplay`): a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
+Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station.
+- [X] permanently show current network strength rssi (value in dB)
+- [x] "kitchen" timer function (a few set of preprogrammed countdown timers for green tea etc.)
+- [x] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
+- [x] controlling the onboard ACT LED for signalling purposes
 
 #### TODO / Brain storming section
 
 - [ ] add two rotary encoders for station / volume control
-- [x] `cronplay` (`autoplay`): a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
-Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station.
 - [ ] Enable/disable `cronplay` with another special `code`.
-- [X] permanently show current network strength rssi (value in dB)
 - [ ] permanently show current network strength rssi (as a bar)
 - [ ] reboot if rssi is too low
 - [ ] check whether stream/mpv is still alive; watchdog; restart mpv.play()
@@ -67,9 +72,6 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] ALSA Equalizer: interface to show and control the equalizer settings
 - [ ] add loudness on/off
 - [ ] alarm clock function with sound and/or internet radio stream, increasing volume
-- [x] "kitchen" timer function (a few set of preprogrammed countdown timers for green tea etc.)
-- [x] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
-- [x] controlling the onboard ACT LED for signalling purposes
 
 #### special requirements
 
