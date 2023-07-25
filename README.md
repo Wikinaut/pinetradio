@@ -74,9 +74,6 @@ Example: switch from the currently played first station to a certain second (e.g
 
 ST7789 library
 
-![grafik](https://user-images.githubusercontent.com/1151915/226862353-6494654d-b1ac-476f-9acd-1418b6f80afd.png)
-![IMG_20230307_172928_edit_286222401319344](https://user-images.githubusercontent.com/1151915/223493327-ed8ce69a-5e18-4a8c-9d04-7432bc0ae5c0.jpg)
-![IMG_20230307_172921_edit_286243996314132](https://user-images.githubusercontent.com/1151915/223493338-398a7b3f-69fc-477f-8bcc-537ab15db991.jpg)
 ![IMG_20230725_140200](https://github.com/Wikinaut/pinetradio/assets/1151915/6af0ea34-13c1-4ac0-b091-0662c8553f7e)
 ![IMG_20230725_135840](https://github.com/Wikinaut/pinetradio/assets/1151915/f162a05a-f5a4-4932-a170-3500a65d41fc)
 ![IMG_20230725_140013](https://github.com/Wikinaut/pinetradio/assets/1151915/fdb11677-6a03-4492-b4d7-7b9d8328f64d)
