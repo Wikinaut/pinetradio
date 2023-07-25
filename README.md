@@ -49,6 +49,7 @@ RaspberryPi Internetradio
 `sudo apt install libasound2-plugin-equal`
 - [x] `chime`: 1, 2, 3, 4 beeps at every hourly quarter (using `apscheduler`: `pip install apscheduler`)
 - [x] Activity (ACT) LED indicates "on" (1x flash) or "muted" (2x flash ) every 5 seconds
+- [X] Soundbox/Sound machine function: play stored sound files 
 
 #### TODO / Brain storming section
 
@@ -74,10 +75,13 @@ Example: switch from the currently played first station to a certain second (e.g
 
 ST7789 library
 
-![IMG_20230725_140200](https://github.com/Wikinaut/pinetradio/assets/1151915/6af0ea34-13c1-4ac0-b091-0662c8553f7e)
 ![IMG_20230725_135840](https://github.com/Wikinaut/pinetradio/assets/1151915/f162a05a-f5a4-4932-a170-3500a65d41fc)
 ![IMG_20230725_140013](https://github.com/Wikinaut/pinetradio/assets/1151915/fdb11677-6a03-4492-b4d7-7b9d8328f64d)
 ![IMG_20230725_135914](https://github.com/Wikinaut/pinetradio/assets/1151915/730eeee9-a4cc-49a8-bcdc-015435f6a621)
 ![IMG_20230725_135825](https://github.com/Wikinaut/pinetradio/assets/1151915/8f711843-cfd5-4fad-94f0-c7d036789f70)
+
+Example for Soundbox function (play stored sound/s):
+![IMG_20230725_140200](https://github.com/Wikinaut/pinetradio/assets/1151915/6af0ea34-13c1-4ac0-b091-0662c8553f7e)
+
 ![IMG_20230725_140310](https://github.com/Wikinaut/pinetradio/assets/1151915/8a286525-d7e0-4c76-8f6e-d9183f5519eb)
 ![IMG_20230725_140320_pyxelate](https://github.com/Wikinaut/pinetradio/assets/1151915/3da61a90-ce56-4991-970f-830c2e808682)
