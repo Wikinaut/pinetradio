@@ -46,6 +46,7 @@ RaspberryPi Internetradio
 - [x] `code`: certain hard-coded key press sequences (à la [port knocking](https://en.wikipedia.org/wiki/Port_knocking)) can trigger special actions or change certain program settings.  
   Example: the key sequence `A B A B` → restarts the WiFi adapter and networking; this takes about 2 seconds.
 - [x] WiFi and networking can be manually restarted by a special key sequence (`code ABAB`)
+- [x] Mplayer can be restarted by 2-key-press `XA` 
 - [x] display of basic network information (SSID, IP address, hostname and RSSI/signal strength)
 - [x] ALSA: configured for multi-channel use with `dmix` plugin and equaliser plugin. `pinetradio` sends its one (stream) or two (beeps etc.) audio signals via `alsa/plugmixequal` to the dmixer which mixed signal is finally equalised, see `.asoundrc` for details and setup.  
 `sudo apt install libasound2-plugin-equal`
@@ -55,7 +56,7 @@ RaspberryPi Internetradio
 - [x] `cronplay` (`autoplay`): a station-play-scheduler for autoplaying certain station/s at certain times similar to `cron`  
 Example: switch from the currently played first station to a certain second (e.g. news) station every hour minutes 00…05 and then switch back to the first station.
 - [X] permanently show current network strength rssi (value in dB)
-- [x] "kitchen" timer function (a few set of preprogrammed countdown timers for green tea etc.)
+- [x] `kitchen timer` function (a set of preprogrammed countdown timers like 2'30" for green tea etc.) can be started by 2-key-press `YB`
 - [x] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
 - [x] controlling the onboard ACT LED for signalling purposes
 
