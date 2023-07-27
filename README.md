@@ -13,7 +13,7 @@ RaspberryPi Internetradio
   `pip install st7789`
   * `sudo systemctl disable rsyslog` # disable logging
   * `sudo systemctl enable pigpiod` # make sure to have `pigpiod -t 0` in /lib/systemd/system/pigpiod.service
-  * `sudo systemctl start pigpiod` # make sure to have `pigpiod -t 0` in /lib/systemd/system/pigpiod.service
+  * `sudo systemctl start pigpiod`
   * `sudo raspi-config`: → Interface Options → enable `SPI` for the LCD-display and enable `I2C` for the DAC
   * `sudo nano /boot/config.txt`:
     ```
@@ -73,6 +73,8 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] ALSA Equalizer: interface to show and control the equalizer settings
 - [ ] add loudness on/off
 - [ ] alarm clock function with sound and/or internet radio stream, increasing volume
+- [ ] method (other than ssh-ing) of setting up WiFi credentials (`captive portal` 60 seconds after boot)
+- [ ] method (other than ssh-ing) of setting up stations (staion names and their stream urls)
 
 #### special requirements
 
