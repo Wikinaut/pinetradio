@@ -531,7 +531,7 @@ pi.set_mode(ACT, pigpio.OUTPUT)
 
 # Create ST7789 LCD display class for square LCD
 # Standard display setup for Pirate Audio, except we omit the backlight pin
-SPI_SPEED_MHZ = 120
+SPI_SPEED_MHZ = 90
 rotation = 270
 
 # regarding backlight pin 13, read:
