@@ -6,8 +6,9 @@
 # because we need to play a stream and additional signals like beeps
 #
 #
-#      20230416 version using pigpio
-#      20230325 version using apscheduler
+#      20230731 2-key-rollover for all four buttons
+#      20230416 using pigpio
+#      20230325 using apscheduler
 #      20230318 version for mpv
 # init 20230218
 
@@ -372,7 +373,14 @@ released = pigpio.HIGH
 
 class TwoButtons():
 
-	def __init__(self,button1,button2,callback1,callback2,callback12):
+	def __init__(self,
+			button1,button2,button3,button4,
+			callback1,callback2,callback3,callback4,
+			callback12,callback13,callback14,
+			callback23,callback24,
+			callback34):
+
+		self.last = ""
 
 		# get a pigpio instance
 		self.pi = pigpio.pi()
@@ -380,28 +388,67 @@ class TwoButtons():
 		# set up buttons
 		self.button1 = button1
 		self.button2 = button2
+		self.button3 = button3
+		self.button4 = button4
 
 		# set up glitch filter to debounce each switch
 		self.pi.set_glitch_filter(self.button1, steady)
 		self.pi.set_glitch_filter(self.button2, steady)
+		self.pi.set_glitch_filter(self.button3, steady)
+		self.pi.set_glitch_filter(self.button4, steady)
 
 		# set up each button as an input
 		self.pi.set_mode(self.button1, pigpio.INPUT)
 		self.pi.set_mode(self.button2, pigpio.INPUT)
+		self.pi.set_mode(self.button3, pigpio.INPUT)
+		self.pi.set_mode(self.button4, pigpio.INPUT)
 
 		# create a callback for when button is pressed
 		self.pi.callback(self.button1, pigpio.EITHER_EDGE, self.button_pressed)
 		self.pi.callback(self.button2, pigpio.EITHER_EDGE, self.button_pressed)
+		self.pi.callback(self.button3, pigpio.EITHER_EDGE, self.button_pressed)
+		self.pi.callback(self.button4, pigpio.EITHER_EDGE, self.button_pressed)
 
 		self.callback1 = callback1
 		self.callback2 = callback2
+		self.callback3 = callback3
+		self.callback4 = callback4
 		self.callback12 = callback12
+		self.callback13 = callback13
+		self.callback14 = callback14
+		self.callback23 = callback23
+		self.callback24 = callback24
+		self.callback34 = callback34
+
+	def clrlast_cb(self):
+		self.last = ""
+
+	def callbackTwo(self,both,pin,level,tick):
+
+		if both != self.last:
+
+			self.last = both
+			clrlastTimer = Timer( 0.1, self.clrlast_cb, args=() )
+			clrlastTimer.start()
+
+			if both == "12":
+				self.callback12(pin,level,tick)
+			elif both == "13":
+				self.callback13(pin,level,tick)
+			elif both == "14":
+				self.callback14(pin,level,tick)
+			elif both == "23":
+				self.callback23(pin,level,tick)
+			elif both == "24":
+				self.callback24(pin,level,tick)
+			elif both == "34":
+				self.callback34(pin,level,tick)
 
 
 	# common button press callback for both buttons
 	def button_pressed(self, pin, level, tick):
 
-		both = False
+		both = None
 
 		if pin == self.button1:
 
@@ -409,12 +456,28 @@ class TwoButtons():
 
 				for _ in range(10):
 					if self.pi.read(self.button2) == pressed:
-						both = True
+						both = "12"
+						break
+					if self.pi.read(self.button3) == pressed:
+						both = "13"
+						break
+					if self.pi.read(self.button4) == pressed:
+						both = "14"
 						break
 					time.sleep(0.005)
 
-				if not both and self.pi.read(self.button1) == pressed:
-					self.callback1(pin,level,tick)
+				if not both:
+					if self.pi.read(self.button1) == pressed:
+						self.callback1(pin,level,tick)
+					if self.pi.read(self.button2) == pressed:
+						self.callback2(pin,level,tick)
+					if self.pi.read(self.button3) == pressed:
+						self.callback3(pin,level,tick)
+					if self.pi.read(self.button4) == pressed:
+						self.callback4(pin,level,tick)
+
+				if both:
+					self.callbackTwo(both,pin,level,tick)
 
 		elif pin == self.button2:
 
@@ -422,15 +485,86 @@ class TwoButtons():
 
 				for _ in range(10):
 					if self.pi.read(self.button1) == pressed:
-						both = True
+						both = "12"
+						break
+					if self.pi.read(self.button3) == pressed:
+						both = "23"
+						break
+					if self.pi.read(self.button4) == pressed:
+						both = "24"
 						break
 					time.sleep(0.005)
 
-				if not both and self.pi.read(self.button2) == pressed:
-					self.callback2(pin,level,tick)
+				if not both:
+					if self.pi.read(self.button1) == pressed:
+						self.callback1(pin,level,tick)
+					if self.pi.read(self.button2) == pressed:
+						self.callback2(pin,level,tick)
+					if self.pi.read(self.button3) == pressed:
+						self.callback3(pin,level,tick)
+					if self.pi.read(self.button4) == pressed:
+						self.callback4(pin,level,tick)
 
-			if both:
-				self.callback12(pin,level,tick)
+				if both:
+					self.callbackTwo(both,pin,level,tick)
+
+		elif pin == self.button3:
+
+			if level == pressed:
+
+				for _ in range(10):
+					if self.pi.read(self.button1) == pressed:
+						both = "13"
+						break
+					if self.pi.read(self.button2) == pressed:
+						both = "23"
+						break
+					if self.pi.read(self.button4) == pressed:
+						both = "34"
+						break
+					time.sleep(0.005)
+
+				if not both:
+					if self.pi.read(self.button1) == pressed:
+						self.callback1(pin,level,tick)
+					if self.pi.read(self.button2) == pressed:
+						self.callback2(pin,level,tick)
+					if self.pi.read(self.button3) == pressed:
+						self.callback3(pin,level,tick)
+					if self.pi.read(self.button4) == pressed:
+						self.callback4(pin,level,tick)
+
+				if both:
+					self.callbackTwo(both,pin,level,tick)
+
+		elif pin == self.button4:
+
+			if level == pressed:
+
+				for _ in range(10):
+					if self.pi.read(self.button1) == pressed:
+						both = "14"
+						break
+					if self.pi.read(self.button2) == pressed:
+						both = "24"
+						break
+					if self.pi.read(self.button3) == pressed:
+						both = "34"
+						break
+					time.sleep(0.005)
+
+				if not both:
+					if self.pi.read(self.button1) == pressed:
+						self.callback1(pin,level,tick)
+					if self.pi.read(self.button2) == pressed:
+						self.callback2(pin,level,tick)
+					if self.pi.read(self.button3) == pressed:
+						self.callback3(pin,level,tick)
+					if self.pi.read(self.button4) == pressed:
+						self.callback4(pin,level,tick)
+
+				if both:
+					self.callbackTwo(both,pin,level,tick)
 
 # Get signal strength and basic network adapter parameters
 
@@ -1047,6 +1181,9 @@ def teatimerready():
 	player.volume=lastvol
 	quindar2()
 
+def dummycb(pin=None,level=None,tick=None):
+	return
+
 def special_teatimer(pin=None,level=None,tick=None):
 	quindar1()
 	buttonqueue.clear()
@@ -1068,12 +1205,23 @@ def special_teatimer(pin=None,level=None,tick=None):
 def special_restartplayer(pin=None,level=None,tick=None):
 	quindar1()
 	buttonqueue.clear()
-	logger.warning("code 5656 detected: restarting player")
+	logger.warning("code 5656 or A+X detected: restarting player")
 
 	stwrite3("restarting the player")
 	quindar2()
 
 	restartplayer()
+
+def special_shutdown(pin=None,level=None,tick=None):
+	quindar1()
+	buttonqueue.clear()
+	logger.warning("code X+Y deteced: gracefully shutting down")
+
+	stwrite3("shutting down")
+	quindar2()
+
+	killer.killed = True
+	killer.shutdown = True
 
 def special_updatecode(pin=None,level=None,tick=None):
 	quindar1()
@@ -1085,6 +1233,26 @@ def special_updatecode(pin=None,level=None,tick=None):
 
 	os.system("cd /home/pi && git pull && sudo reboot now")
 
+def special_mute(pin=None,level=None,tick=None):
+	player.mute = True
+	updmuted()
+
+	img = Image.new('RGB', (disp.width, disp.height), color="blue")
+	draw = ImageDraw.Draw(img)
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+
+	draw.text( ( 120, 80),
+		"muted", font=font, fill="white", anchor="mm" )
+
+	font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
+	draw.text( ( 120, 160 ),
+		"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
+
+	disp.display(img)
+
+	servicebell(100)
+	triggerdisplay(timeout=10)
 
 
 def buttonpressed(pin):
@@ -1233,25 +1401,7 @@ def handle_volumedecrement_button(pin, level, tick):
 
 		else:
 
-			player.mute = True
-			updmuted()
-
-			img = Image.new('RGB', (disp.width, disp.height), color="blue")
-			draw = ImageDraw.Draw(img)
-
-			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
-
-			draw.text( ( 120, 80),
-				"muted", font=font, fill="white", anchor="mm" )
-
-			font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 46)
-			draw.text( ( 120, 160 ),
-				"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
-
-			disp.display(img)
-
-			servicebell(100)
-			triggerdisplay(timeout=10)
+			special_mute()
 
 			while pi.read(pin) == 0 and time.time()-starttime < 5:
 				time.sleep(0.2)
@@ -1303,20 +1453,17 @@ def setup_button_handlers():
 	# pi.callback( PIN['B'], pigpio.FALLING_EDGE, handle_volumeincrement_button)
 	# pi.callback( PIN['A'], pigpio.FALLING_EDGE, handle_volumedecrement_button)
 
-	TwoButtons(
-		PIN['X'], PIN['A'],
+	TwoButtons(PIN['X'],PIN['A'],PIN['Y'],PIN['B'],
 		handle_stationdecrement_button,
 		handle_volumedecrement_button,
-		special_restartplayer
-	)
-
-	TwoButtons(
-		PIN['Y'], PIN['B'],
 		handle_stationincrement_button,
 		handle_volumeincrement_button,
-		special_teatimer
-	)
-
+		special_restartplayer,
+		special_shutdown,
+		dummycb,
+		dummycb,
+		special_mute,
+		special_teatimer)
 
 def restartplayer():
 	logger.warning(" ")
