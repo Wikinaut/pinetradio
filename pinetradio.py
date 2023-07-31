@@ -1184,6 +1184,28 @@ def teatimerready():
 def dummycb(pin=None,level=None,tick=None):
 	return
 
+def special_station0(pin=None,level=None,tick=None):
+	global stationcounter
+
+	buttonqueue.clear()
+	logger.warning("Button X+B detected: tuning to station 1")
+
+	displaywasoff = triggerdisplay()
+
+	if muted:
+		player.mute = False
+		updmuted()
+		showicytitle()
+		setvol(volstep, graceful=False, show=True)
+
+	if displaywasoff:
+		return
+
+	stationcounter = 0
+	updstationcounter(stationcounter)
+	playstation(stationcounter, graceful=True)
+
+
 def special_teatimer(pin=None,level=None,tick=None):
 	quindar1()
 	buttonqueue.clear()
@@ -1200,7 +1222,6 @@ def special_teatimer(pin=None,level=None,tick=None):
 	playsound(volumepercent=200, soundfile="/home/pi/sounds/teetimer-2min30.mp3")
 	player.volume=lastvol
 	quindar2()
-
 
 def special_restartplayer(pin=None,level=None,tick=None):
 	quindar1()
@@ -1454,16 +1475,16 @@ def setup_button_handlers():
 	# pi.callback( PIN['A'], pigpio.FALLING_EDGE, handle_volumedecrement_button)
 
 	TwoButtons(PIN['X'],PIN['A'],PIN['Y'],PIN['B'],
-		handle_stationdecrement_button,
-		handle_volumedecrement_button,
-		handle_stationincrement_button,
-		handle_volumeincrement_button,
-		special_restartplayer,
-		special_shutdown,
-		dummycb,
-		dummycb,
-		special_mute,
-		special_teatimer)
+		handle_stationdecrement_button, #1
+		handle_volumedecrement_button, #2
+		handle_stationincrement_button, #3
+		handle_volumeincrement_button, #4
+		special_restartplayer, #12
+		special_shutdown, #13
+		special_station0, #14
+		special_station0, #23
+		special_mute, #24
+		special_teatimer) #34
 
 def restartplayer():
 	logger.warning(" ")
