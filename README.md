@@ -59,6 +59,7 @@ Example: switch from the currently played first station to a certain second (e.g
 - [x] `kitchen timer` function (a set of preprogrammed countdown timers like 2'30" for green tea etc.) can be started by 2-key-press `YB`
 - [x] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
 - [x] controlling the onboard ACT LED for signalling purposes
+- [x] `code B A B A` → code updating from git repo and reboot
 
 #### TODO / Brain storming section
 
