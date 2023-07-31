@@ -725,6 +725,7 @@ def stwrite3(message):
 
 	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
 
+	message = message.strip(', ')
 	logger.warning(f"{message} ({rssi} db)")
 
 	if muted:
