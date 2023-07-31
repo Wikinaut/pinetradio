@@ -82,10 +82,8 @@ class TwoButtons():
 		self.callback24 = callback24
 		self.callback34 = callback34
 
-
 	def clrlast_cb(self):
 		self.last = ""
-
 
 	def callbackTwo(self,both):
 
