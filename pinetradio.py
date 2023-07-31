@@ -430,7 +430,7 @@ class TwoButtons():
 					self.callback2(pin,level,tick)
 
 			if both:
-				self.callback12(912,level,tick)
+				self.callback12(pin,level,tick)
 
 # Get signal strength and basic network adapter parameters
 
