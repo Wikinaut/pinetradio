@@ -1075,6 +1075,17 @@ def special_restartplayer(pin=None,level=None,tick=None):
 
 	restartplayer()
 
+def special_updatecode(pin=None,level=None,tick=None):
+	quindar1()
+	buttonqueue.clear()
+	logger.warning("code 6565 detected: updating code")
+
+	stwrite3("updating the code")
+	quindar2()
+
+	os.system("cd /home/pi && git pull && sudo reboot now")
+
+
 
 def buttonpressed(pin):
 	global anybuttonpressed,bptimer,buttonqueue
@@ -1090,7 +1101,8 @@ def buttonpressed(pin):
 		return
 
 	if seqmatch(code6565,buttonqueue):
-		special_restartplayer()
+		# special_restartplayer()
+		special_updatecode()
 		return
 
 	if seqmatch(code55555566,buttonqueue):
