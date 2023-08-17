@@ -43,6 +43,7 @@ STATIONS = [
 	[ "Left Coast", "http://somafm.com/seventies.pls" ],
 	[ "Groove Salad", "http://ice1.somafm.com/groovesalad-128-mp3" ],
 	[ "Heavyweight Reggae", "http://somafm.com/reggae.pls" ],
+	[ "DEF CON Radio", "https://somafm.com/defcon.pls" ],
 	[ "Radio Gold", "https://radiogold-live.cast.addradio.de/radiogold/live/mp3/high/stream.mp3" ],
 	[ "Caprice Minimalism", "http://213.141.131.10:8000/minimalism" ]
 ]
