@@ -1496,7 +1496,7 @@ def restartplayer():
 def shutdown():
 
 	servicebellwait(100)
-	beep3()
+	# beep3()
 	setbacklight(100)
 
 	img = Image.new('RGB', (disp.width, disp.height), color="red")
@@ -1514,10 +1514,10 @@ def shutdown():
 		disp.display(img)
 		time.sleep(0.2)
 
-	big("3")
-	big("2")
-	big("1")
-	big("0")
+	# big("3")
+	# big("2")
+	# big("1")
+	# big("0")
 	setbacklight(0)
 	cleardisplay()
 	disp.display(img)
