@@ -60,7 +60,7 @@ showtime_every_n_seconds = 60
 # after mute:
 # whether volume buttons immediately control volume
 # or first press only restart backlight display
-volumebutton_after_mute_direct = False
+buttons_work_after_mute_direct = True
 
 global dict
 
@@ -1039,7 +1039,7 @@ def handle_stationincrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if displaywasoff:
+	if displaywasoff and not buttons_work_after_mute_direct:
 		return
 
 	stationcounter = (stationcounter+1) % len(STATIONS)
@@ -1059,7 +1059,7 @@ def handle_stationdecrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if displaywasoff:
+	if displaywasoff and not buttons_work_after_mute_direct:
 		return
 
 	stationcounter = (stationcounter-1) % len(STATIONS)
@@ -1257,6 +1257,7 @@ def special_updatecode(pin=None,level=None,tick=None):
 
 def special_mute(pin=None,level=None,tick=None):
 	player.mute = True
+	servicebell(100)
 	updmuted()
 
 	img = Image.new('RGB', (disp.width, disp.height), color="blue")
@@ -1272,9 +1273,9 @@ def special_mute(pin=None,level=None,tick=None):
 		"{0}".format(timenow()), font=font, fill="white", anchor="mm" )
 
 	disp.display(img)
+	triggerdisplay(timeout=3)
 
-	servicebell(100)
-	triggerdisplay(timeout=10)
+	showtime(timeout=10,force=True)
 
 
 def buttonpressed(pin):
@@ -1357,7 +1358,7 @@ def handle_volumeincrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 		triggerdisplay()
-		if not volumebutton_after_mute_direct:
+		if not buttons_work_after_mute_direct:
 			return
 	elif displaywason:
 			return
@@ -1398,7 +1399,7 @@ def handle_volumedecrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volatep, graceful=False, show=True)
 		triggerdisplay()
-		if not volumebutton_after_mute_direct:
+		if not buttons_work_after_mute_direct:
 			return
 
 	starttime = time.time()
@@ -1418,7 +1419,7 @@ def handle_volumedecrement_button(pin, level, tick):
 			updmuted()
 			showicytitle()
 			triggerdisplay()
-			if not volumebutton_after_mute_direct:
+			if not buttons_work_after_mute_direct:
 				return
 
 		else:
