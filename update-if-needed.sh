@@ -10,7 +10,8 @@ changed=0
 cd /home/pi
 
 # git remote update && git status -uno | grep -q 'Your branch is behind' && changed=1
-git status -uno | grep -q 'Your branch is behind' && changed=1
+# git status -uno | grep -q 'Your branch is behind' && changed=1
+git diff --quiet --exit-code && changed=1
 
 if [ $changed = 1 ]; then
     # Force pull
