@@ -4,14 +4,14 @@
 # git fetch origin main
 
 # Hard reset
-## git reset --hard origin/master
+# git reset --hard origin/master
 
 changed=1
 cd /home/pi
 
 # git remote update && git status -uno | grep -q 'Your branch is behind' && changed=1
 # git status -uno | grep -q 'Your branch is behind' && changed=1
-git diff --quiet --exit-code && changed=0
+git diff origin/main --quiet --exit-code && changed=0
 
 if [ $changed = 1 ]; then
     # Force pull
