@@ -5,7 +5,7 @@
 # requires an alsa device with dmix properties
 # because we need to play a stream and additional signals like beeps
 #
-#
+#      20230826 buttons work immediately after mute
 #      20230731 2-key-rollover for all four buttons
 #      20230416 using pigpio
 #      20230325 using apscheduler
