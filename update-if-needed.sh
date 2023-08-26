@@ -4,7 +4,7 @@
 # git fetch origin main
 
 # Hard reset
-# git reset --hard origin/master
+## git reset --hard origin/master
 
 changed=1
 cd /home/pi
