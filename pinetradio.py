@@ -1253,7 +1253,12 @@ def special_updatecode(pin=None,level=None,tick=None):
 	stwrite3("updating the code")
 	quindar2()
 
-	os.system("cd /home/pi && git pull && sudo reboot now")
+	# os.system("cd /home/pi && git pull && sudo reboot now")
+	os.system("cd /home/pi \
+		&& changed=1 ; git diff origin/main --quiet --exit-code \
+		&& changed=0; if [ $changed = 1 ] ; then git stash; git reset --hard HEAD; git pull; sudo reboot now; fi \
+	")
+
 
 def special_mute(pin=None,level=None,tick=None):
 	player.mute = True
