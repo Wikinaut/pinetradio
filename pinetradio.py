@@ -1400,7 +1400,7 @@ def handle_volumedecrement_button(pin, level, tick):
 		player.mute = False
 		updmuted()
 		showicytitle()
-		setvol(volatep, graceful=False, show=True)
+		setvol(volstep, graceful=False, show=True)
 		triggerdisplay()
 		if not buttons_work_after_mute_direct:
 			return
