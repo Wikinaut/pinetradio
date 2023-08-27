@@ -60,6 +60,7 @@ Example: switch from the currently played first station to a certain second (e.g
 - [x] text-to-speech: informational messages with synthetic speech like station name, time and timer announcements 
 - [x] controlling the onboard ACT LED for signalling purposes
 - [x] `code B A B A` → code updating from git repo and reboot
+- [x] update script checks and updates the code on every restart 
 
 #### TODO / Brain storming section
 
