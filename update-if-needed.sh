@@ -11,6 +11,7 @@ cd /home/pi
 
 # git remote update && git status -uno | grep -q 'Your branch is behind' && changed=1
 # git status -uno | grep -q 'Your branch is behind' && changed=1
+git remote update
 git diff origin/main --quiet --exit-code && changed=0
 
 if [ $changed = 1 ]; then
