@@ -1253,6 +1253,8 @@ def special_shutdown(pin=None,level=None,tick=None):
 	killer.shutdown = True
 
 def special_updatecode(pin=None,level=None,tick=None):
+	player.mute = True
+
 	quindar1()
 	buttonqueue.clear()
 	logger.warning("code 6565 detected: updating code")
@@ -1261,12 +1263,16 @@ def special_updatecode(pin=None,level=None,tick=None):
 	quindar2()
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
-	os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
+	# os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
+	retc = os.system("cd /home/pi && git remote update; git diff origin/main --quiet --exit-code") >> 8
 
-	player.mute = True
-	speak( "diese-software-ist-schon-aktuell" )
-	player.mute = False
-
+	if retc == 0:
+		speak( "diese-software-ist-schon-aktuell" )
+		player.mute = False
+	else:
+		speak( "die-software-wurde-auf-den-neuesten-Stand-gebracht" )
+		os.system("git stash && git reset --hard HEAD && git pull && sudo reboot now;")
+		# reboots now
 
 def special_mute(pin=None,level=None,tick=None):
 	player.mute = True
