@@ -4,13 +4,13 @@
 
 cd /home/pi
 
-git remote update origin
+git remote update
 if ! $(git diff origin/main --quiet --exit-code)
 then
     # Force pull
     git stash
     git reset --hard HEAD
-    git pull origin main
+    git pull
     # sudo reboot now
     echo "Updated successfully.";
 else
