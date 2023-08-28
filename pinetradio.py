@@ -245,12 +245,10 @@ def playsound(volumepercent=100, soundfile=beepsound):
 	logger.warning( f"playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
-	soundplayer.wait_for_playback()
+	soundplayer.wait_for_property('idle-active')
 
 def speak(speechfile):
-	player.mute = True
 	playsound( soundfile="/home/pi/sounds/" + speechfile + ".wav" )
-	player.mute = False
 
 def threadedPlaysoundFunction(volumepercent,soundfile):
 	playsound(volumepercent,soundfile)
@@ -1144,8 +1142,8 @@ def restartWifi():
 	beepwait()
 
 	logger.warning("muting player")
-	player.mute=True
 
+	player.mute=True
 	speak("wlan-wird-getrennt-und-danach-neu-hergestellt")
 
 	os.system('sudo ifdown --force wlan0')
@@ -1245,6 +1243,7 @@ def special_shutdown(pin=None,level=None,tick=None):
 	buttonqueue.clear()
 	logger.warning("code X+Y deteced: gracefully shutting down")
 
+	player.mute = True
 	speak( "ausschalten")
 
 	stwrite3("shutting down")
@@ -1261,9 +1260,9 @@ def special_updatecode(pin=None,level=None,tick=None):
 	stwrite3("updating the code")
 	quindar2()
 
-	speak( "die-software-wurde-auf-den-neuesten-Stand-gebracht" )
 	# os.system("cd /home/pi && git pull && sudo reboot now")
 	os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
+	speak( "diese-software-ist-schon-aktuell" )
 
 
 def special_mute(pin=None,level=None,tick=None):
