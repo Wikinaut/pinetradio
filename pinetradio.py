@@ -1515,6 +1515,9 @@ def setup_button_handlers():
 def restartplayer():
 	logger.warning(" ")
 	logger.warning("*** restarting player")
+
+	player.mute = True
+	speak( "die-radioplayersoftware-wird-nun-schnell-neu-gestartet" )
 	stationplay( stationcounter )
 
 
