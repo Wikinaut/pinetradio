@@ -1243,6 +1243,8 @@ def special_shutdown(pin=None,level=None,tick=None):
 	buttonqueue.clear()
 	logger.warning("code X+Y deteced: gracefully shutting down")
 
+	speak( "ausschalten")
+
 	stwrite3("shutting down")
 	quindar2()
 
@@ -1257,6 +1259,7 @@ def special_updatecode(pin=None,level=None,tick=None):
 	stwrite3("updating the code")
 	quindar2()
 
+	speak( "die-software-wurde-auf-den-neuesten-Stand-gebracht" )
 	# os.system("cd /home/pi && git pull && sudo reboot now")
 	os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
 
