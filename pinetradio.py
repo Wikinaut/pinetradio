@@ -242,10 +242,13 @@ font46 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.tt
 def playsound(volumepercent=100, soundfile=beepsound):
 
 	nowtime=timenow()
-	# print( f"{nowtime} playsound {soundfile} ({volumepercent} %)")
+	logger.warning( f"{nowtime} playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
 	soundplayer.wait_for_playback()
+
+def speak(speechfile):
+	playsound( "/home/pi/sounds/" + speechfile + ".wav" )
 
 def threadedPlaysoundFunction(volumepercent,soundfile):
 	playsound(volumepercent,soundfile)
@@ -1141,6 +1144,7 @@ def restartWifi():
 	logger.warning("muting player and soundplayer")
 
 	player.mute=True
+	speak("wlan-wird-getrennt-und-danach-neu-hergestellt.wav")
 
 	os.system('sudo ifdown --force wlan0')
 	time.sleep(1)
@@ -1254,7 +1258,7 @@ def special_updatecode(pin=None,level=None,tick=None):
 	quindar2()
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
-	os.system("cd /home/pi && git remote update origin; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
+	os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
 
 
 def special_mute(pin=None,level=None,tick=None):
