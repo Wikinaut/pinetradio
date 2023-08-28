@@ -769,13 +769,16 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
 	text2=['']
 	for word in re.split(r"([ /-])", text):
 		if len(word) > maxwordlength:
-			wx = dict.wrap(word,maxpartialwordlength)
-			if wx:
-				text2.append(wx[0].strip())
-				text2.append(wx[1].strip())
-			else:
+
+			try:
+				wx = dict.wrap(word,maxpartialwordlength)
+				if wx:
+					text2.append(wx[0].strip())
+					text2.append(wx[1].strip())
+			except:
 				# none indicates: no hyphenation possible
 				text2.append(word.strip())
+
 		else:
 			text2.append(word.strip())
 
