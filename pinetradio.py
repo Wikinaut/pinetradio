@@ -1519,7 +1519,7 @@ def restartplayer():
 	player.mute = True
 	speak( "die-radioplayersoftware-wird-nun-schnell-neu-gestartet" )
 	stationplay( stationcounter )
-
+	player.mute = False
 
 def shutdown():
 
