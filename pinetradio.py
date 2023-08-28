@@ -242,13 +242,13 @@ font46 = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.tt
 def playsound(volumepercent=100, soundfile=beepsound):
 
 	nowtime=timenow()
-	logger.warning( f"{nowtime} playsound {soundfile} ({volumepercent} %)")
+	logger.warning( f"playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
 	soundplayer.wait_for_playback()
 
 def speak(speechfile):
-	playsound( "/home/pi/sounds/" + speechfile + ".wav" )
+	playsound( soundfile="/home/pi/sounds/" + speechfile + ".wav" )
 
 def threadedPlaysoundFunction(volumepercent,soundfile):
 	playsound(volumepercent,soundfile)
@@ -1141,10 +1141,10 @@ def restartWifi():
 	stwrite3("restarting the WiFi")
 	beepwait()
 
-	logger.warning("muting player and soundplayer")
-
+	logger.warning("muting player")
 	player.mute=True
-	speak("wlan-wird-getrennt-und-danach-neu-hergestellt.wav")
+
+	speak("wlan-wird-getrennt-und-danach-neu-hergestellt")
 
 	os.system('sudo ifdown --force wlan0')
 	time.sleep(1)
@@ -1158,7 +1158,7 @@ def restartWifi():
 	hostname,ipaddr,ssid,rssi = get_networkinfo()
 	stwrite3(ipaddr)
 
-	logger.warning("unmuting player and soundplayer")
+	logger.warning("unmuting player")
 	restartplayer()
 	player.mute=False
 	updmuted()
