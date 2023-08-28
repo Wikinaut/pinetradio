@@ -248,7 +248,9 @@ def playsound(volumepercent=100, soundfile=beepsound):
 	soundplayer.wait_for_playback()
 
 def speak(speechfile):
+	player.mute = True
 	playsound( soundfile="/home/pi/sounds/" + speechfile + ".wav" )
+	player.mute = False
 
 def threadedPlaysoundFunction(volumepercent,soundfile):
 	playsound(volumepercent,soundfile)
