@@ -1254,7 +1254,7 @@ def special_updatecode(pin=None,level=None,tick=None):
 	quindar2()
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
-	os.system("cd /home/pi && git remote update ; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
+	os.system("cd /home/pi && git remote update origin; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
 
 
 def special_mute(pin=None,level=None,tick=None):
