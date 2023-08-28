@@ -61,6 +61,7 @@ Example: switch from the currently played first station to a certain second (e.g
 - [x] controlling the onboard ACT LED for signalling purposes
 - [x] `code B A B A` → code updating from git repo and reboot only when code has changed
 - [x] update script checks and updates the code on every restart
+- [x] text-to-speech output (offline generated texts) when updating or restarting code or WiFi 
 
 #### TODO / Brain storming section
 
