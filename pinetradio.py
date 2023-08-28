@@ -1262,7 +1262,10 @@ def special_updatecode(pin=None,level=None,tick=None):
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
 	os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
+
+	player.mute = True
 	speak( "diese-software-ist-schon-aktuell" )
+	player.mute = False
 
 
 def special_mute(pin=None,level=None,tick=None):
