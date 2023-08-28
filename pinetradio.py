@@ -245,6 +245,7 @@ def playsound(volumepercent=100, soundfile=beepsound):
 	logger.warning( f"playsound {soundfile} ({volumepercent} %)")
 	soundplayer.volume=volumepercent*player.volume/100
 	soundplayer.play(soundfile)
+	soundplayer.wait_for_playback
 	soundplayer.wait_for_property('idle-active')
 
 def speak(speechfile):
