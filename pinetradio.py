@@ -276,7 +276,7 @@ def quindar2(volumepercent=100,soundfile=quindar2soundshort):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
 
-def servicebell(volumepercent=25,soundfile=servicebellsound):
+def servicebell(volumepercent=50,soundfile=servicebellsound):
 	t = Thread( target=threadedPlaysoundFunction, daemon=True, args=( volumepercent,soundfile ) )
 	t.start()
 
@@ -1270,8 +1270,12 @@ def special_updatecode(pin=None,level=None,tick=None):
 		speak( "diese-software-ist-schon-aktuell" )
 		player.mute = False
 	else:
+		os.system("git stash && git reset --hard HEAD && git pull")
+
 		speak( "die-software-wurde-auf-den-neuesten-Stand-gebracht" )
-		os.system("git stash && git reset --hard HEAD && git pull && sudo reboot now;")
+		speak( "radio-wird-neu-gestartet" )
+
+		os.system( "sudo reboot now")
 		# reboots now
 
 def special_mute(pin=None,level=None,tick=None):
