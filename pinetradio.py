@@ -1383,7 +1383,7 @@ def buttonpressed(pin):
 		pass
 
 	# suppress showtime for n seconds after the last key press
-	bptimer = Timer( 90, bptimerhandler, args = (pin, ) )
+	bptimer = Timer( 10, bptimerhandler, args = (pin, ) )
 	bptimer.start()
 
 	return grace
