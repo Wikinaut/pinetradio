@@ -1369,7 +1369,13 @@ def buttonpressed(pin):
 	try:
 		grace = not bptimer.finished.is_set()
 	except:
-		grace = False
+		try:
+			if bptimer.is_alive():
+				grace = False	# timer has been set up, but has timed out
+			else:
+				grace = True	# suppress after start, when no timer has been set up
+		except:
+			grace = True # no timer has been set up
 
 	try:
 		bptimer.cancel()
@@ -1377,10 +1383,9 @@ def buttonpressed(pin):
 		pass
 
 	# suppress showtime for n seconds after the last key press
-	bptimer = Timer( 10, bptimerhandler, args = (pin, ) )
+	bptimer = Timer( 90, bptimerhandler, args = (pin, ) )
 	bptimer.start()
 
-	logger.warning(f"grace: {grace}")
 	return grace
 
 def handle_volumeincrement_button(pin, level, tick):
@@ -1426,7 +1431,6 @@ def handle_volumedecrement_button(pin, level, tick):
 	global volstep,grace,volumedecrementbuttonblock,buttonqueue
 
 	lastseconds = buttonpressed(pin)
-	logger.warning(f"lastseconds: {lastseconds}")
 
 	if volumedecrementbuttonblock:
 		return
