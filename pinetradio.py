@@ -1306,6 +1306,8 @@ def special_mute(pin=None,level=None,tick=None):
 
 
 def buttonpressed(pin):
+	# returns false, if there was no button pressed in the last (grace) seconds
+
 	global anybuttonpressed,bptimer,buttonqueue
 
 	beep(volumepercent=50)
@@ -1316,12 +1318,12 @@ def buttonpressed(pin):
 	if seqmatch(code5656,buttonqueue):
 		buttonqueue.clear()
 		restartWifi()
-		return
+		return True
 
 	if seqmatch(code6565,buttonqueue):
 		# special_restartplayer()
 		special_updatecode()
-		return
+		return True
 
 	if seqmatch(code55555566,buttonqueue):
 		buttonqueue.clear()
@@ -1329,7 +1331,7 @@ def buttonpressed(pin):
 		player.loop_file="inf"
 		cleardisplay()
 		stwrite3(minimal4)
-		return
+		return True
 
 	if seqmatch(code5555566,buttonqueue):
 		buttonqueue.clear()
@@ -1337,7 +1339,7 @@ def buttonpressed(pin):
 		player.loop_file="inf"
 		cleardisplay()
 		stwrite3(minimal3)
-		return
+		return True
 
 	if seqmatch(code555566,buttonqueue):
 		buttonqueue.clear()
@@ -1345,7 +1347,7 @@ def buttonpressed(pin):
 		player.loop_file="inf"
 		cleardisplay()
 		stwrite3(minimal2)
-		return
+		return True
 
 	if seqmatch(code55566,buttonqueue):
 		buttonqueue.clear()
@@ -1353,7 +1355,7 @@ def buttonpressed(pin):
 		player.loop_file="inf"
 		cleardisplay()
 		stwrite3(minimal1)
-		return
+		return True
 
 	if seqmatch(code5566,buttonqueue):
 		buttonqueue.clear()
@@ -1361,17 +1363,25 @@ def buttonpressed(pin):
 		player.loop_file="inf"
 		cleardisplay()
 		stwrite3(ambience)
-		return
+		return True
+
+
+	try:
+		grace = not bptimer.finished.is_set()
+	except:
+		grace = False
 
 	try:
 		bptimer.cancel()
-
 	except:
 		pass
 
-	# suppress showtime for 90 seconds after the last key press
-	bptimer = Timer( 90, bptimerhandler, args = (pin, ) )
+	# suppress showtime for n seconds after the last key press
+	bptimer = Timer( 10, bptimerhandler, args = (pin, ) )
 	bptimer.start()
+
+	logger.warning(f"grace: {grace}")
+	return grace
 
 def handle_volumeincrement_button(pin, level, tick):
 	global volstep
@@ -1399,6 +1409,9 @@ def gracetimer():
 	global volumedecrementbuttonblock
 	volumedecrementbuttonblock = False
 
+def mute_gracetimer():
+	return
+
 def blockvolumedecrementbutton():
 	global volumedecrementbuttonblock
 
@@ -1412,7 +1425,8 @@ def blockvolumedecrementbutton():
 def handle_volumedecrement_button(pin, level, tick):
 	global volstep,grace,volumedecrementbuttonblock,buttonqueue
 
-	buttonpressed(pin)
+	lastseconds = buttonpressed(pin)
+	logger.warning(f"lastseconds: {lastseconds}")
 
 	if volumedecrementbuttonblock:
 		return
@@ -1426,8 +1440,11 @@ def handle_volumedecrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 		triggerdisplay()
+
 		if not buttons_work_after_mute_direct:
 			return
+	elif not lastseconds:
+		special_mute()
 
 	starttime = time.time()
 
