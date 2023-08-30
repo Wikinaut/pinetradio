@@ -344,10 +344,6 @@ def get_git_revision_short_hash() -> str:
 	'log','-1', '--date=format:%Y%m%d-%H%M', '--format=%ad %h'],
 	cwd=os.path.dirname(os.path.realpath(__file__))).decode('ascii').strip().split()
 
-global githash
-githash = get_git_revision_short_hash()
-
-
 global cfgdata
 
 try:
@@ -1099,6 +1095,7 @@ def showtime(timeout=short_showtimeTimeout,force=False):
 			pass
 
 	hostname,ipaddr,ssid,rssi = get_networkinfo(networkadapter)
+	githash = get_git_revision_short_hash()
 
 	timeimg = Image.new('RGB', (disp.width, disp.height), color="blue")
 	draw = ImageDraw.Draw(timeimg)
