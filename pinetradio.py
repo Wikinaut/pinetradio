@@ -1261,7 +1261,7 @@ def special_updatecode(pin=None,level=None,tick=None):
 	logger.warning("code 6565 detected: updating code")
 
 	stwrite3("updating the code")
-	quindar2()
+	quindar2wait()
 	speak( "Es-wird-nun-geprüft-ob-die-Software-des-Internet-Radios-noch-aktuell-ist" )
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
