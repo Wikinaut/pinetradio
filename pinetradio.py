@@ -1262,6 +1262,7 @@ def special_updatecode(pin=None,level=None,tick=None):
 
 	stwrite3("updating the code")
 	quindar2()
+	speak( "Es-wird-nun-geprüft-ob-die-Software-des-Internet-Radios-noch-aktuell-ist" )
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
 	# os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
