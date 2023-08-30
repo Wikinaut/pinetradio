@@ -1261,8 +1261,8 @@ def special_updatecode(pin=None,level=None,tick=None):
 	logger.warning("code 6565 detected: updating code")
 
 	stwrite3("updating the code")
-	quindar2wait()
 	speak( "Es-wird-nun-geprüft-ob-die-Software-des-Internet-Radios-noch-aktuell-ist" )
+	quindar2wait()
 
 	# os.system("cd /home/pi && git pull && sudo reboot now")
 	# os.system("cd /home/pi && git remote update; if ! $(git diff origin/main --quiet --exit-code) ; then echo 'update needed' && git stash && git reset --hard HEAD && git pull && sudo reboot now; fi ")
