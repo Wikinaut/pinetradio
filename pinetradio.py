@@ -1658,16 +1658,20 @@ def resumeplay(laststation, newsstationcount):
 
 def mutecheck():
 	if muted:
-		blinkled(2)
+#		blinkled(2)
+		blinkled(0)
 	else:
 		blinkled(1)
 
 def threadedBlinkledFunction(n=1):
-	for i in range(n):
-		pi.write(ACT, 0) # on
-		time.sleep(0.03)
+	if n == 0:
 		pi.write(ACT, 1) # off
-		time.sleep(0.3)
+	else:
+		for i in range(n):
+			pi.write(ACT, 0) # on
+			time.sleep(0.03)
+			pi.write(ACT, 1) # off
+			time.sleep(0.3)
 
 def blinkled(n=1):
 	t = Thread( target=threadedBlinkledFunction, daemon=True, args=( n, ) )
@@ -1691,9 +1695,9 @@ def setup_scheduler():
 	schedule_showtime.add_job(mutecheck, 'cron', second="*/5")
 	schedule_showtime.start()
 
-	schedule_showtime = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
-	schedule_showtime.add_job(blinkled, 'cron', minute="*")
-	schedule_showtime.start()
+#	schedule_showtime = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
+#	schedule_showtime.add_job(blinkled, 'cron', minute="*")
+#	schedule_showtime.start()
 
 	schedule_gong1 = BackgroundScheduler(daemon=True,timezone=str(tzlocal.get_localzone()))
 	schedule_gong1.add_job(gong1, 'cron', minute=15)
