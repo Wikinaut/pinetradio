@@ -78,6 +78,7 @@ Example: switch from the currently played first station to a certain second (e.g
 - [ ] alarm clock function with sound and/or internet radio stream, increasing volume
 - [ ] method (other than ssh-ing) of setting up WiFi credentials (`captive portal` 60 seconds after boot)
 - [ ] method (other than ssh-ing) of setting up stations (station names and their stream urls)
+- [ ] optional mode: Bluetooth audio receiver
 
 #### special requirements
 
