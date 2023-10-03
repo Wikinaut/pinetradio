@@ -1021,6 +1021,7 @@ def handle_radiobutton1(pin):
     playstation(stationcounter, graceful=True)
 
 def triggerdisplay(timeout=None):
+# returns True if backlight was on
 
 	if timeout is None:
 		if muted:
@@ -1028,13 +1029,13 @@ def triggerdisplay(timeout=None):
 		else:
 			timeout = buttonBacklightTimeout
 
-	return not retriggerbacklight(dutycycle=100,timeout=timeout)
+	return retriggerbacklight(dutycycle=100,timeout=timeout)
 
 def handle_stationincrement_button(pin, level, tick):
 	global stationcounter
 
 	buttonpressed(pin)
-	displaywasoff = triggerdisplay()
+	displaywason = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -1042,7 +1043,7 @@ def handle_stationincrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if displaywasoff and not buttons_work_after_mute_direct:
+	if not displaywason and not buttons_work_after_mute_direct:
 		return
 
 	stationcounter = (stationcounter+1) % len(STATIONS)
@@ -1054,7 +1055,7 @@ def handle_stationdecrement_button(pin, level, tick):
 	global stationcounter
 
 	buttonpressed(pin)
-	displaywasoff = triggerdisplay()
+	displaywason = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -1062,7 +1063,7 @@ def handle_stationdecrement_button(pin, level, tick):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if displaywasoff and not buttons_work_after_mute_direct:
+	if not displaywason and not buttons_work_after_mute_direct:
 		return
 
 	stationcounter = (stationcounter-1) % len(STATIONS)
@@ -1196,7 +1197,7 @@ def special_station0(pin=None,level=None,tick=None):
 	buttonqueue.clear()
 	logger.warning("Button X+B detected: tuning to station 1")
 
-	displaywasoff = triggerdisplay()
+	displaywason = triggerdisplay()
 
 	if muted:
 		player.mute = False
@@ -1204,7 +1205,7 @@ def special_station0(pin=None,level=None,tick=None):
 		showicytitle()
 		setvol(volstep, graceful=False, show=True)
 
-	if displaywasoff:
+	if not displaywason:
 		return
 
 	stationcounter = 0
