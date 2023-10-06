@@ -1401,7 +1401,7 @@ def handle_volumeincrement_button(pin, level, tick):
 		triggerdisplay()
 		if not buttons_work_after_mute_direct:
 			return
-	elif displaywason:
+	elif not displaywason:
 			return
 
 	if volstep < len(volumesteps)-1:
